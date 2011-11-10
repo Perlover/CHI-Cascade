@@ -6,9 +6,9 @@ build_requires:
   ExtUtils::MakeMaker: 6.42
 configure_requires:
   ExtUtils::MakeMaker: 6.42
-distribution_type: module
-generated_by: 'Module::Install version 1.01'
-license: perl
+dynamic_config: 0
+generated_by: 'Module::Install version 1.01, CPAN::Meta::Converter version 2.112150'
+license: unknown
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
@@ -19,6 +19,4 @@ no_index:
     - t
 requires:
   CHI: 0
-resources:
-  license: http://dev.perl.org/licenses/
 version: 0.01

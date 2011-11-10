@@ -1,0 +1,41 @@
+{
+   "abstract" : "Cache dependencies (principles of operation of make utility)",
+   "author" : [
+      "Perlover <perlover@perlover.com>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Install version 1.01, CPAN::Meta::Converter version 2.112150",
+   "license" : [
+      "unknown"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "CHI-Cascade",
+   "no_index" : {
+      "directory" : [
+         "inc",
+         "t"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.42"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.42"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "CHI" : 0
+         }
+      }
+   },
+   "release_status" : "stable",
+   "version" : "0.01"
+}

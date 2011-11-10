@@ -1,3 +1,5 @@
 /t/*.pid
 /t/*.socket
 Notes.txt
+*.bak
+/Makefile
