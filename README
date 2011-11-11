@@ -50,6 +50,56 @@ DESCRIPTION
     This module is experimental yet. I plan to improve it near time but some
     things already work. You can take a look for t/* tests as examples.
 
+CONSTRUCTOR
+    $cascade = CHI::Cascade->new( %options )
+        This method constructs a new "CHI::Cascade" object and returns it.
+        Key/value pair arguments may be provided to set up the initial
+        state. Now there is only one option: *chi* - instance of CHI object.
+
+METHODS
+    rule( %options )
+        To add new rule to "CHI::Cascade" object. All rules should be added
+        before first "run" method
+
+        The keys of %options are:
+
+        target
+            A target for "run" and for searching of "depends". It can be as
+            scalar text or "Regexp" object created through "qr//"
+
+        depends
+            The list or a scalar value of dependencies - the list of targets
+            which the current rule is dependent. Each item can be scalar
+            value (exactly matched target) or code reference which will be
+            executed during matching of target. A code subroutine will get a
+            parameters from "=~" operator against "target" matching by
+            "qr//" operator(not tested while) - please see the section
+            "EXAMPLE" for this example.
+
+        code
+            The code reference for computing a value of this target. Will be
+            executed if no value in cache for this target or any dependence
+            or dependences of dependences and so on will be recomputed. This
+            subroutine will get parameters: $_[0] - flat text of current
+            target and hashref of values of dependencies. This module should
+            guarantee that values of dependencies will be valid values even
+            if value is "undef". This code can return "undef" value as a
+            valid code return but author doesn't recommend it. If
+            "CHI::Cascade" could not get a valid values of all dependencies
+            of current target before execution of this code the last will
+            not be executed (The "run" will return "undef").
+
+    run( $target )
+        This method makes a cascade computing if need and returns value for
+        this target If any dependence of this target of any dependencies of
+        dependencies were recomputed this target will be recomputed too.
+
+    touch( $target )
+        This method refreshes the time of this target. Here is analogy with
+        touch utility of Unix and behaviour as make after it. After "touch"
+        all targets are dependent from this target will be recomputed at
+        next "run" with an appropriate ones.
+
 STATUS
     This module is experimental and not finished for new features ;-) Please
     send me issues through <https://github.com/Perlover/CHI-Cascade> page

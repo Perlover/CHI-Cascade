@@ -21,7 +21,8 @@ else {
 }
 
 $SIG{__DIE__} = sub {
-    `{ kill cat t/memcached.pid; rm -f t/memcached.pid; rm -f t/memcached.socket; } >/dev/null 2>&1`;
+    `{ kill \`cat t/memcached.pid\`; rm -f t/memcached.pid; rm -f t/memcached.socket; } >/dev/null 2>&1`;
+    $SIG{__DIE__} = 'IGNORE';
 };
 
 my $cascade = CHI::Cascade->new(

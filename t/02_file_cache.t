@@ -9,11 +9,13 @@ plan skip_all => 'Not installed CHI::Driver::File'
 
 plan tests => 14;
 
-(
-    $SIG{__DIE__} = sub {
-	`{ rm -rf t/file_cache; } >/dev/null 2>&1`;
-    }
-)->();
+
+$SIG{__DIE__} = sub {
+    `{ rm -rf t/file_cache; } >/dev/null 2>&1`;
+    $SIG{__DIE__} = 'IGNORE';
+};
+
+`{ rm -rf t/file_cache; } >/dev/null 2>&1`;
 
 my $cascade = CHI::Cascade->new(
     chi => CHI->new(
