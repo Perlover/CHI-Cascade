@@ -4,6 +4,8 @@ author:
   - 'Perlover <perlover@perlover.com>'
 build_requires:
   ExtUtils::MakeMaker: 6.42
+  Test::Base: 0
+  Test::More: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
@@ -19,6 +21,8 @@ no_index:
     - t
 requires:
   CHI: 0
+  Time::HiRes: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.01
+  repository: git://github.com/Perlover/CHI-Cascade.git
+version: 0.02

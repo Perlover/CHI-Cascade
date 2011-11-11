@@ -6,7 +6,7 @@
    "dynamic_config" : 0,
    "generated_by" : "Module::Install version 1.01, CPAN::Meta::Converter version 2.112150",
    "license" : [
-      "unknown"
+      "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
@@ -22,7 +22,9 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : "6.42"
+            "ExtUtils::MakeMaker" : "6.42",
+            "Test::Base" : 0,
+            "Test::More" : 0
          }
       },
       "configure" : {
@@ -32,10 +34,19 @@
       },
       "runtime" : {
          "requires" : {
-            "CHI" : 0
+            "CHI" : 0,
+            "Time::HiRes" : 0
          }
       }
    },
    "release_status" : "stable",
+   "resources" : {
+      "license" : [
+         "http://dev.perl.org/licenses/"
+      ],
+      "repository" : {
+         "url" : "git://github.com/Perlover/CHI-Cascade.git"
+      }
+   },
    "version" : "0.01"
 }

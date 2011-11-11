@@ -6,3 +6,5 @@ Makefile\.old$
 ^Makefile$
 ^Notes\.txt$
 \.bak$
+^CHI-Cascade-.*?/
+\.tar\.gz$
