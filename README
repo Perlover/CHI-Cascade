@@ -1,5 +1,5 @@
 NAME
-    CHI::Cascade - the cache dependencies (cache and like 'make' utility
+    CHI::Cascade - a cache dependencies (cache and like 'make' utility
     concept)
 
 SYNOPSIS
@@ -187,7 +187,7 @@ LICENSE
     Perl itself.
 
 SEE ALSO
-        CHI                                 - mandatory
-        CHI::Driver::Memcached::Fast        - recommended
-        CHI::Driver::File                   - file caching
+    CHI - mandatory
+    CHI::Driver::Memcached::Fast - recommended
+    CHI::Driver::File - file caching
 

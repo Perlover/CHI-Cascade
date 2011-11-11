@@ -18,6 +18,8 @@ build_requires 'Test::More';
 build_requires 'Test::Base';
 build_requires 'Storable';
 
+clean_files 't/memcached*.pid t/memcached*.socket';
+
 WriteAll();
 
 package MY;

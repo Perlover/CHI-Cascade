@@ -1,5 +1,8 @@
-current
+0.04
     - More improved the test t/03_memcached_multi.t
+    - Tests with memcached for root user are not started (passed)
+      Now they are started
+    - More ready distributive
 
 0.03
     - Fixed bugs in tests (for example not be stopped memcached)

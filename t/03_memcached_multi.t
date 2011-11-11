@@ -13,12 +13,28 @@ use constant DELAY	=> 2.0;
 plan skip_all => 'Not installed CHI::Driver::Memcached::Fast'
   unless eval "use CHI::Driver::Memcached::Fast; 1";
 
-my $cwd;
+my ($pid_file, $socket_file, $cwd, $user_opt);
+
 chomp($cwd = `pwd`);
 
-my $out = `memcached -d -s $cwd/t/memcached.socket -a 644 -m 64 -c 10 -P $cwd/t/memcached.pid -t 2 2>&1`;
+if ($< == 0) {
+    # if root - other options
+    $pid_file 		= "/tmp/memcached.$$.pid";
+    $socket_file	= "/tmp/memcached.$$.socket";
+    $user_opt		= '-u nobody';
 
-if ($?) {
+}
+else {
+    $pid_file 		= "$cwd/t/memcached.$$.pid";
+    $socket_file	= "$cwd/t/memcached.$$.socket";
+    $user_opt		= '';
+}
+
+my $out = `memcached $user_opt -d -s $socket_file -a 644 -m 64 -c 10 -P $pid_file -t 2 2>&1`;
+
+sleep 1;
+
+if ( $? || ! (-f $pid_file )) {
     chomp $out;
     plan skip_all => "Cannot start the memcached for this test ($out)";
 }
@@ -50,11 +66,13 @@ else {
 # Here parent - it will command
 
 $SIG{__DIE__} = sub {
-    `{ kill \`cat t/memcached.pid\`; rm -f t/memcached.pid; rm -f t/memcached.socket; } >/dev/null 2>&1`;
+    `{ kill \`cat $pid_file\`; } >/dev/null 2>&1`;
     kill 15, $pid_slow if $pid_slow;
     kill 15, $pid_quick if $pid_quick;
     waitpid($pid_slow, 0);
     waitpid($pid_quick, 0);
+    unlink $pid_file	unless -l $pid_file;
+    unlink $socket_file	unless -l $socket_file;
     $SIG{__DIE__} = 'IGNORE';
 };
 
@@ -122,7 +140,7 @@ sub run_slow_process {
     my $cascade = CHI::Cascade->new(
 	chi => CHI->new(
 	    driver		=> 'Memcached::Fast',
-	    servers		=> ['t/memcached.socket'],
+	    servers		=> [$socket_file],
 	    namespace		=> 'CHI::Cascade::tests'
 	)
     );
@@ -165,7 +183,7 @@ sub run_quick_process {
     my $cascade = CHI::Cascade->new(
 	chi => CHI->new(
 	    driver		=> 'Memcached::Fast',
-	    servers		=> ['t/memcached.socket'],
+	    servers		=> [$socket_file],
 	    namespace		=> 'CHI::Cascade::tests'
 	)
     );
@@ -190,8 +208,6 @@ sub run_quick_process {
 	}
     }
 }
-
-
 
 sub setup_for_slow_process {
     pipe(PARENT_SLOW_RDR, CHILD_SLOW_WTR);
