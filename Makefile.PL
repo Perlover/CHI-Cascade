@@ -4,7 +4,7 @@ use warnings;
 use inc::Module::Install;
 
 name 'CHI-Cascade';
-abstract 'Cache dependencies (principles of operation of make utility)';
+abstract 'A cache dependencies (principles of operation of make utility)';
 
 author 'Perlover <perlover@perlover.com>';
 version_from 'lib/CHI/Cascade.pm';

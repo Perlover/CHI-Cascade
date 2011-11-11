@@ -250,7 +250,7 @@ __END__
 
 =head1 NAME
 
-CHI::Cascade - the cache dependencies (cache and like 'make' utility concept)
+CHI::Cascade - a cache dependencies (cache and like 'make' utility concept)
 
 =head1 SYNOPSIS
 
@@ -467,8 +467,14 @@ This module is free software and is published under the same terms as Perl itsel
 
 =head1 SEE ALSO
 
-    CHI					- mandatory
-    CHI::Driver::Memcached::Fast	- recommended
-    CHI::Driver::File			- file caching
+=over
+
+=item L<CHI>						- mandatory
+
+=item L<CHI::Driver::Memcached::Fast>	- recommended
+
+=item L<CHI::Driver::File>			- file caching
+
+=back
 
 =cut
