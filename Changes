@@ -1,4 +1,4 @@
-0.04
+0.05
     - More improved the test t/03_memcached_multi.t
     - Tests with memcached for root user are not started (passed)
       Now they are started
