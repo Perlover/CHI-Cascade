@@ -1,3 +1,6 @@
+current
+    - More improved the test t/03_memcached_multi.t
+
 0.03
     - Fixed bugs in tests (for example not be stopped memcached)
     - New test - multi-process reading/getting from memcached (with forks)

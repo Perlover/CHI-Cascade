@@ -16,6 +16,7 @@ requires 'Time::HiRes';
 
 build_requires 'Test::More';
 build_requires 'Test::Base';
+build_requires 'Storable';
 
 WriteAll();
 

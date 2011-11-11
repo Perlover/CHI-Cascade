@@ -4,6 +4,7 @@ author:
   - 'Perlover <perlover@perlover.com>'
 build_requires:
   ExtUtils::MakeMaker: 6.42
+  Storable: 0
   Test::Base: 0
   Test::More: 0
 configure_requires:
