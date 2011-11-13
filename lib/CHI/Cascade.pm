@@ -110,7 +110,15 @@ sub target_locked {
 sub recompute {
     my ( $self, $rule, $target, $dep_values) = @_;
 
-    my $ret = eval { $rule->{code}->($target, $dep_values) };
+    my $ret = eval {
+	$rule->{code}->($target, $dep_values,
+	    {
+	        cascade		=> $self,
+		rule		=> $rule,
+		( exists($rule->{params}) ? ( params => $rule->{params} ) : () )
+	    }
+	);
+    };
 
     $self->{stats}{recompute}++;
 
@@ -344,13 +352,52 @@ L</EXAMPLE> for this example.
 
 The code reference for computing a value of this target. Will be executed if no
 value in cache for this target or any dependence or dependences of dependences
-and so on will be recomputed. This subroutine will get parameters: $_[0] - flat
-text of current target and hashref of values of dependencies. This module should
-guarantee that values of dependencies will be valid values even if value is
-C<undef>. This code can return C<undef> value as a valid code return but author
-doesn't recommend it. If C<CHI::Cascade> could not get a valid values of all
-dependencies of current target before execution of this code the last will not
-be executed (The C<run> will return C<undef>).
+and so on will be recomputed. This subroutine will get three parameters:
+
+=over
+
+=item target
+
+The plain text text of current target
+
+=item values of dependencies
+
+The hashref of values of dependencies. Each key of hash is plain text of
+dependence and value is cached or recomputed value of this one.
+
+=item data from C<CHI::Cascade>
+
+The hashref to data passed by C<CHI::Cascade> object instance. The keys of this
+hash are following:
+
+=over
+
+=item cascade
+
+The reference of instance of L<CHI::Cascade> object
+
+=item rule
+
+The reference of instance of L<CHI::Cascade::Rule> object. You could want to use
+it if you want to get a list of dependencies for current target for example.
+
+=item params
+
+Any data passed through I<params> option in rule method.
+
+=back
+
+=back
+
+This module should guarantee that values of dependencies will be valid values
+even if value is C<undef>. This code can return C<undef> value as a valid code
+return but author doesn't recommend it. If C<CHI::Cascade> could not get a valid
+values of all dependencies of current target before execution of this code the
+last will not be executed (The C<run> will return C<undef>).
+
+=item params
+
+Using this option you can pass in your code any additional parameters
 
 =back
 
@@ -364,8 +411,8 @@ recomputed this target will be recomputed too.
 
 This method refreshes the time of this target. Here is analogy with L<touch>
 utility of Unix and behaviour as L<make> after it. After L</touch> all targets
-are dependent from this target will be recomputed at next L</run> with
-an appropriate ones.
+are dependent from this target will be recomputed at next L</run> with an
+appropriate ones.
 
 =back
 
