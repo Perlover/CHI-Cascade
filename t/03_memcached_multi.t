@@ -32,6 +32,15 @@ else {
 
 my $out = `memcached $user_opt -d -s $socket_file -a 644 -m 64 -c 10 -P $pid_file -t 2 2>&1`;
 
+$SIG{__DIE__} = sub {
+    `{ kill \`cat $pid_file\`; } >/dev/null 2>&1`;
+    unlink $pid_file	unless -l $pid_file;
+    unlink $socket_file	unless -l $socket_file;
+    $SIG{__DIE__} = 'IGNORE';
+};
+
+$SIG{TERM} = $SIG{INT} = $SIG{HUP} = sub { die "Terminated by " . shift };
+
 sleep 1;
 
 if ( $? || ! (-f $pid_file )) {
@@ -76,10 +85,9 @@ $SIG{__DIE__} = sub {
     $SIG{__DIE__} = 'IGNORE';
 };
 
-$SIG{TERM} = $SIG{INT} = $SIG{HUP} = sub { die "Terminated by " . shift };
-$SIG{ALRM} = sub { die "Alarmed!" };
-
 alarm( DELAY * 4 + 1 );
+
+$SIG{ALRM} = sub { die "Alarmed!" };
 
 start_parent_commanding();
 
@@ -224,10 +232,12 @@ sub setup_for_quick_process {
 }
 
 sub setup_slow_parent {
+    $SIG{__DIE__} = 'IGNORE';
     close PARENT_SLOW_RDR; close PARENT_SLOW_WTR;
 }
 
 sub setup_quick_parent {
+    $SIG{__DIE__} = 'IGNORE';
     close PARENT_QUICK_RDR; close PARENT_QUICK_WTR;
 }
 

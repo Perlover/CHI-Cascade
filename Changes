@@ -1,3 +1,6 @@
+devel
+    - Improved signal handling in tests (for memcached killing)
+
 0.11
     - Fixed bug (sometime dead locks were after target locking)
     - Added 'busy_lock' option in contructor and to 'rule' method

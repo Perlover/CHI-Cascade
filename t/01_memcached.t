@@ -26,6 +26,15 @@ else {
 
 my $out = `memcached $user_opt -d -s $socket_file -a 644 -m 64 -c 10 -P $pid_file -t 2 2>&1`;
 
+$SIG{__DIE__} = sub {
+    `{ kill \`cat $pid_file\`; } >/dev/null 2>&1`;
+    unlink $pid_file	unless -l $pid_file;
+    unlink $socket_file	unless -l $socket_file;
+    $SIG{__DIE__} = 'IGNORE';
+};
+
+$SIG{TERM} = $SIG{INT} = $SIG{HUP} = sub { die "Terminated by signal " . shift };
+
 sleep 1;
 
 if ( $? || ! (-f $pid_file )) {
@@ -35,13 +44,6 @@ if ( $? || ! (-f $pid_file )) {
 else {
     plan tests => 14;
 }
-
-$SIG{__DIE__} = sub {
-    `{ kill \`cat $pid_file\`; } >/dev/null 2>&1`;
-    unlink $pid_file	unless -l $pid_file;
-    unlink $socket_file	unless -l $socket_file;
-    $SIG{__DIE__} = 'IGNORE';
-};
 
 my $cascade = CHI::Cascade->new(
     chi => CHI->new(
