@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.11;
+our $VERSION = 0.12;
 
 use Carp;
 
@@ -133,9 +133,9 @@ sub value_ref_if_recomputed {
 
     return undef unless defined $rule;
 
-    my $qr_params = $rule->qr_params;
+    my @qr_params = $rule->qr_params;
 
-    $self->{chain}{$rule} = 1;
+    $self->{chain}{$target} = 1;
 
     if ( $self->target_computing($target) ) {
 	# If we have any target as a being computed (dependencie/original)
@@ -160,10 +160,12 @@ sub value_ref_if_recomputed {
 	my $dep_target;
 
 	foreach my $depend (@{ $rule->depends }) {
-	    $dep_target = ref($depend) eq 'CODE' ? $depend->($qr_params) : $depend;
+	    $dep_target = ref($depend) eq 'CODE' ? $depend->(@qr_params) : $depend;
 
-	    die qq{Found a circled rule (target: $dep_target)"}
-	      if ! $only_from_cache && exists $self->{chain}{ $dep_values{$dep_target}->[0] = $self->find($dep_target) };
+	    $dep_values{$dep_target}->[0] = $self->find($dep_target);
+
+	    die qq{Found a circled rule (target '$dep_target' as dependence of '$target')"}
+	      if ( ! $only_from_cache && exists $self->{chain}{$dep_target} );
 
 	    $self->target_lock($rule)
 	      if (   ! $only_from_cache
@@ -228,10 +230,12 @@ sub find {
 
     die "CHI::Cascade::find : got empty target\n" if $plain_target eq '';
 
+    my $new_rule;
+
     # If target is flat text
     if (exists $self->{plain_targets}{$plain_target}) {
-	$self->{plain_targets}{$plain_target}->{matched_target} = $plain_target;
-	return $self->{plain_targets}{$plain_target};
+	( $new_rule = $self->{plain_targets}{$plain_target}->new )->{matched_target} = $plain_target;
+	return $new_rule;
     }
 
     # If rule's target is Regexp type
@@ -239,9 +243,9 @@ sub find {
 	my @qr_params;
 
 	if (@qr_params = $plain_target =~ $rule->{target}) {
-	    $rule->qr_params(@qr_params);
-	    $rule->{matched_target} = $plain_target;
-	    return $rule;
+	    ( $new_rule = $rule->new )->qr_params(@qr_params);
+	    $new_rule->{matched_target} = $plain_target;
+	    return $new_rule;
 	}
     }
 
@@ -492,7 +496,7 @@ recomputed.
 And even we can have a same rule:
 
     $cascade->rule(
-	target	=> qr/unique_name_(.*)/,
+	target	=> qr/^unique_name_(.*)$/,
 	depends	=> sub { 'unique_name_other_' . $_[0] },
 	code	=> sub {
 	    my ($rule, $target_name, $values_of_depends) = @_;
@@ -517,7 +521,7 @@ When we will do:
 
     $cascade->run('unique_name_52');
 
-$cascade will find rule with qr/unique_name_(.*)/, will make =~ and will find
+$cascade will find rule with qr/^unique_name_(.*)$/, will make =~ and will find
 a depend as unique_name_other_52
 
 =head1 AUTHOR

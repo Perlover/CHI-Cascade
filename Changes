@@ -1,5 +1,8 @@
-devel
+0.12
+    - More stable version as i think ;-) Please use it
     - Improved signal handling in tests (for memcached killing)
+    - Fixed bug - dependencies as sub {} didn't get a qr_params properly
+    - Fixed rule's bug
 
 0.11
     - Fixed bug (sometime dead locks were after target locking)

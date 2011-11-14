@@ -6,8 +6,18 @@ use warnings;
 sub new {
     my ($class, %opts) = @_;
 
+    my $from = ref($class) ? $class : \%opts;
+
     $opts{depends} = [ defined( $opts{depends} ) ? ( $opts{depends} ) : () ] unless ref($opts{depends}) eq 'ARRAY';
-    bless { %opts, qr_params => [] }, ref($class) || $class;
+
+    # To do clone or new object
+    bless {
+	map({ $_ => $from->{$_}}
+	  grep { exists $from->{$_} }
+	  qw( target depends code params busy_lock )),
+	qr_params	=> [],
+	matched_target	=> undef
+    }, ref($class) || $class;
 }
 
 sub qr_params {

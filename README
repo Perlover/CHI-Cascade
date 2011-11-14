@@ -202,7 +202,7 @@ EXAMPLE
     And even we can have a same rule:
 
         $cascade->rule(
-            target  => qr/unique_name_(.*)/,
+            target  => qr/^unique_name_(.*)$/,
             depends => sub { 'unique_name_other_' . $_[0] },
             code    => sub {
                 my ($rule, $target_name, $values_of_depends) = @_;
@@ -227,8 +227,8 @@ EXAMPLE
 
         $cascade->run('unique_name_52');
 
-    $cascade will find rule with qr/unique_name_(.*)/, will make =~ and will
-    find a depend as unique_name_other_52
+    $cascade will find rule with qr/^unique_name_(.*)$/, will make =~ and
+    will find a depend as unique_name_other_52
 
 AUTHOR
     This module has been written by Perlover <perlover@perlover.com>
