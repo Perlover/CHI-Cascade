@@ -262,7 +262,7 @@ sub set_cascade_rules {
 	target		=> qr/^one_page_(\d+)$/,
 	depends		=> 'big_array',
 	code		=> sub {
-	    my ($target, $values) = @_;
+	    my ($rule, $target, $values) = @_;
 
 	    my ($page) = $target =~ /^one_page_(\d+)$/;
 

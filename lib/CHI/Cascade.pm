@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.05;
+our $VERSION = 0.10;
 
 use Carp;
 
@@ -110,15 +110,7 @@ sub target_locked {
 sub recompute {
     my ( $self, $rule, $target, $dep_values) = @_;
 
-    my $ret = eval {
-	$rule->{code}->($target, $dep_values,
-	    {
-	        cascade		=> $self,
-		rule		=> $rule,
-		( exists($rule->{params}) ? ( params => $rule->{params} ) : () )
-	    }
-	);
-    };
+    my $ret = eval { $rule->{code}->( $rule, $target, $rule->{dep_values} = $dep_values ) };
 
     $self->{stats}{recompute}++;
 
@@ -135,11 +127,11 @@ sub recompute {
 sub value_ref_if_recomputed {
     my ( $self, $rule, $target, $only_from_cache ) = @_;
 
+    return undef unless defined $rule;
+
     my $qr_params = $rule->qr_params;
 
-    $self->{chain}{$target} = 1;
-
-    return undef unless $rule;
+    $self->{chain}{$rule} = 1;
 
     if ( $self->target_computing($target) ) {
 	# If we have any target as a being computed (dependencie/original)
@@ -163,13 +155,11 @@ sub value_ref_if_recomputed {
     my $ret = eval {
 	my $dep_target;
 
-	foreach my $depend (@{ $rule->{depends} }) {
+	foreach my $depend (@{ $rule->depends }) {
 	    $dep_target = ref($depend) eq 'CODE' ? $depend->($qr_params) : $depend;
 
-	    die qq{Found a circled target "$dep_target"}
-	      if ! $only_from_cache && exists $self->{chain}{$dep_target};
-
-	    $dep_values{$dep_target}->[0] = $self->find($dep_target);
+	    die qq{Found a circled rule (target: $dep_target)"}
+	      if ! $only_from_cache && exists $self->{chain}{ $dep_values{$dep_target}->[0] = $self->find($dep_target) };
 
 	    $self->target_lock($target)
 	      if (   ! $only_from_cache
@@ -233,8 +223,12 @@ sub find {
     my ($self, $plain_target) = @_;
 
     die "CHI::Cascade::find : got empty target\n" if $plain_target eq '';
+
     # If target is flat text
-    return $self->{plain_targets}{$plain_target} if (exists $self->{plain_targets}{$plain_target});
+    if (exists $self->{plain_targets}{$plain_target}) {
+	$self->{plain_targets}{$plain_target}->{matched_target} = $plain_target;
+	return $self->{plain_targets}{$plain_target};
+    }
 
     # If rule's target is Regexp type
     foreach my $rule (@{$self->{qr_targets}}) {
@@ -271,23 +265,28 @@ CHI::Cascade - a cache dependencies (cache and like 'make' utility concept)
 	target	=> 'unique_name',
 	depends	=> ['unique_name_other1', 'unique_name_other2'],
 	code	=> sub {
-	    my ($target_name, $values_of_depends) = @_;
+	    my ($rule, $target_name, $values_of_depends) = @_;
 
 	    # $values_of_depends == {
 	    #     unique_name_other1 => $value_1,
 	    #     unique_name_other2 => $value_2
 	    # }
+	    # $rule->target	eq	$target_name
+	    # $rule->depends	===	['unique_name_other1', 'unique_name_other2']
+	    # $rule->dep_values	==	$values_of_depends
+	    # $rule->params	==	{ a => 1, b => 2 }
 
 	    # Now we can calcualte $value
 	    return $value;
-	}
+	},
+	params	=> { a => 1, b => 2 }
     );
 
     $cascade->rule(
 	target	=> 'unique_name_other1',
 	depends	=> 'unique_name_other3',
 	code	=> sub {
-	    my ($target_name, $values_of_depends) = @_;
+	    my ($rule, $target_name, $values_of_depends) = @_;
 
 	    # $values_of_depends == {
 	    #     unique_name_other3 => $value_3
@@ -327,8 +326,8 @@ Now there is only one option: I<chi> - instance of L<CHI> object.
 
 =item rule( %options )
 
-To add new rule to C<CHI::Cascade> object. All rules should be added before first
-L</run> method
+To add new rule to C<CHI::Cascade> object. All rules should be added before
+first L</run> method
 
 The keys of %options are:
 
@@ -352,42 +351,27 @@ L</EXAMPLE> for this example.
 
 The code reference for computing a value of this target. Will be executed if no
 value in cache for this target or any dependence or dependences of dependences
-and so on will be recomputed. This subroutine will get three parameters:
+and so on will be recomputed. Will be executed as $code->( $rule, $target,
+$hashref_to_value_of_dependencies ) I<(The API of running this code was changed
+since v0.10)>
 
 =over
 
-=item target
+=item $rule
 
-The plain text text of current target
+An instance of L<CHI::Cascade::Rule> object. You can use it object as accessor
+for some current executed target data (plain text of target, for getting of
+parameters and so on). Please to see L<CHI::Cascade::Rule>
 
-=item values of dependencies
+=item $target
 
-The hashref of values of dependencies. Each key of hash is plain text of
-dependence and value is cached or recomputed value of this one.
+A current target as plain text (what a target the $cascade got from L<run>
+method)
 
-=item data from C<CHI::Cascade>
+=item $hashref_to_value_of_dependencies
 
-The hashref to data passed by C<CHI::Cascade> object instance. The keys of this
-hash are following:
-
-=over
-
-=item cascade
-
-The reference of instance of L<CHI::Cascade> object
-
-=item rule
-
-The reference of instance of L<CHI::Cascade::Rule> object. You could want to use
-it if you want to get a list of dependencies for current target for example.
-
-=item params
-
-Any data passed through I<params> option in rule method.
-
-=back
-
-=back
+A hash reference of values of all dependencies for current target. Keys in this
+hash are flat strings of dependecies and values are computed or cached ones.
 
 This module should guarantee that values of dependencies will be valid values
 even if value is C<undef>. This code can return C<undef> value as a valid code
@@ -395,9 +379,13 @@ return but author doesn't recommend it. If C<CHI::Cascade> could not get a valid
 values of all dependencies of current target before execution of this code the
 last will not be executed (The C<run> will return C<undef>).
 
+=back
+
 =item params
 
-Using this option you can pass in your code any additional parameters
+You can pass in your code any additional parameters by this option. These
+parameters are accessed in your code through L<params|CHI::Cascade::Rule/params>
+method of L<CHI::Cascade::Rule> instance object.
 
 =back
 
@@ -450,14 +438,14 @@ old previous computed value or I<undef> value.
 
 If other process want to get data from cache we should not block it. So
 concurrent process can get an old data if new computing is run or can get
-I<undef> value. A concurrent process should decide itself what it should do after
-it - try again after few time or print some message like 'Please wait and try
-again' to user.
+I<undef> value. A concurrent process should decide itself what it should do
+after it - try again after few time or print some message like 'Please wait and
+try again' to user.
 
 =item Each target is splitted is two items in cache
 
-For optimization this module keeps target's info by separately from value
-item. A target item has lock & timestamp fields. A value item has a computed value.
+For optimization this module keeps target's info by separately from value item.
+A target item has lock & timestamp fields. A value item has a computed value.
 
 =back
 
@@ -480,11 +468,12 @@ And even we can have a same rule:
 	target	=> qr/unique_name_(.*)/,
 	depends	=> sub { 'unique_name_other_' . $_[0] },
 	code	=> sub {
-	    my ($target_name, $values_of_depends) = @_;
+	    my ($rule, $target_name, $values_of_depends) = @_;
 
-	    # $this_name == 'unique_name_3' if $cascade->run('unique_name_3') was
-	    # $values_of_depends == {
-	    #     unique_name_other3 => $value_ref_3
+	    # $rule->qr_params		=== ( 3 )
+	    # $target_name		== 'unique_name_3' if $cascade->run('unique_name_3') was
+	    # $values_of_depends	== {
+	    #     unique_name_other_3	=> $value_ref_3
 	    # }
 	}
     );
@@ -492,7 +481,7 @@ And even we can have a same rule:
     $cascade->rule(
 	target	=> qr/unique_name_other_(.*)/,
 	code	=> sub {
-	    my ($target_name, $values_of_depends) = @_;
+	    my ($rule, $target_name, $values_of_depends) = @_;
 	    ...
 	}
     );
@@ -510,17 +499,29 @@ This module has been written by Perlover <perlover@perlover.com>
 
 =head1 LICENSE
 
-This module is free software and is published under the same terms as Perl itself.
+This module is free software and is published under the same terms as Perl
+itself.
 
 =head1 SEE ALSO
 
 =over
 
-=item L<CHI>						- mandatory
+=item L<CHI::Cascade::Rule>
 
-=item L<CHI::Driver::Memcached::Fast>	- recommended
+An instance of this object can be used in your target codes.
 
-=item L<CHI::Driver::File>			- file caching
+=item L<CHI>
+
+This object is used for cache.
+
+=item L<CHI::Driver::Memcached::Fast>
+
+Recommended if you have the Memcached
+
+=item L<CHI::Driver::File>
+
+Recommended if you want to use the file caching instead the Memcached for
+example
 
 =back
 

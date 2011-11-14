@@ -64,11 +64,11 @@ $cascade->rule(
     target		=> qr/^one_page_(\d+)$/,
     depends		=> 'big_array',
     code		=> sub {
-	my ($target, $values) = @_;
+	my ($rule) = @_;
 
-	my ($page) = $target =~ /^one_page_(\d+)$/;
+	my ($page) = $rule->target =~ /^one_page_(\d+)$/;
 
-	my $ret = [ @{$values->{big_array}}[ ($page * 10) .. (( $page + 1 ) * 10 - 1) ] ];
+	my $ret = [ @{$rule->dep_values->{big_array}}[ ($page * 10) .. (( $page + 1 ) * 10 - 1) ] ];
 	$ret;
     }
 );

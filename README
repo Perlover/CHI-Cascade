@@ -12,23 +12,28 @@ SYNOPSIS
             target  => 'unique_name',
             depends => ['unique_name_other1', 'unique_name_other2'],
             code    => sub {
-                my ($target_name, $values_of_depends) = @_;
+                my ($rule, $target_name, $values_of_depends) = @_;
 
                 # $values_of_depends == {
                 #     unique_name_other1 => $value_1,
                 #     unique_name_other2 => $value_2
                 # }
+                # $rule->target     eq      $target_name
+                # $rule->depends    ===     ['unique_name_other1', 'unique_name_other2']
+                # $rule->dep_values ==      $values_of_depends
+                # $rule->params     ==      { a => 1, b => 2 }
 
                 # Now we can calcualte $value
                 return $value;
-            }
+            },
+            params  => { a => 1, b => 2 }
         );
 
         $cascade->rule(
             target  => 'unique_name_other1',
             depends => 'unique_name_other3',
             code    => sub {
-                my ($target_name, $values_of_depends) = @_;
+                my ($rule, $target_name, $values_of_depends) = @_;
 
                 # $values_of_depends == {
                 #     unique_name_other3 => $value_3
@@ -79,15 +84,38 @@ METHODS
         code
             The code reference for computing a value of this target. Will be
             executed if no value in cache for this target or any dependence
-            or dependences of dependences and so on will be recomputed. This
-            subroutine will get parameters: $_[0] - flat text of current
-            target and hashref of values of dependencies. This module should
-            guarantee that values of dependencies will be valid values even
-            if value is "undef". This code can return "undef" value as a
-            valid code return but author doesn't recommend it. If
-            "CHI::Cascade" could not get a valid values of all dependencies
-            of current target before execution of this code the last will
-            not be executed (The "run" will return "undef").
+            or dependences of dependences and so on will be recomputed. Will
+            be executed as $code->( $rule, $target,
+            $hashref_to_value_of_dependencies ) *(The API of running this
+            code was changed since v0.10)*
+
+            $rule
+                An instance of CHI::Cascade::Rule object. You can use it
+                object as accessor for some current executed target data
+                (plain text of target, for getting of parameters and so on).
+                Please to see CHI::Cascade::Rule
+
+            $target
+                A current target as plain text (what a target the $cascade
+                got from run method)
+
+            $hashref_to_value_of_dependencies
+                A hash reference of values of all dependencies for current
+                target. Keys in this hash are flat strings of dependecies
+                and values are computed or cached ones.
+
+                This module should guarantee that values of dependencies
+                will be valid values even if value is "undef". This code can
+                return "undef" value as a valid code return but author
+                doesn't recommend it. If "CHI::Cascade" could not get a
+                valid values of all dependencies of current target before
+                execution of this code the last will not be executed (The
+                "run" will return "undef").
+
+        params
+            You can pass in your code any additional parameters by this
+            option. These parameters are accessed in your code through
+            params method of CHI::Cascade::Rule instance object.
 
     run( $target )
         This method makes a cascade computing if need and returns value for
@@ -155,11 +183,12 @@ EXAMPLE
             target  => qr/unique_name_(.*)/,
             depends => sub { 'unique_name_other_' . $_[0] },
             code    => sub {
-                my ($target_name, $values_of_depends) = @_;
+                my ($rule, $target_name, $values_of_depends) = @_;
 
-                # $this_name == 'unique_name_3' if $cascade->run('unique_name_3') was
-                # $values_of_depends == {
-                #     unique_name_other3 => $value_ref_3
+                # $rule->qr_params          === ( 3 )
+                # $target_name              == 'unique_name_3' if $cascade->run('unique_name_3') was
+                # $values_of_depends        == {
+                #     unique_name_other_3   => $value_ref_3
                 # }
             }
         );
@@ -167,7 +196,7 @@ EXAMPLE
         $cascade->rule(
             target  => qr/unique_name_other_(.*)/,
             code    => sub {
-                my ($target_name, $values_of_depends) = @_;
+                my ($rule, $target_name, $values_of_depends) = @_;
                 ...
             }
         );
@@ -187,7 +216,15 @@ LICENSE
     Perl itself.
 
 SEE ALSO
-    CHI - mandatory
-    CHI::Driver::Memcached::Fast - recommended
-    CHI::Driver::File - file caching
+    CHI::Cascade::Rule
+        An instance of this object can be used in your target codes.
+
+    CHI This object is used for cache.
+
+    CHI::Driver::Memcached::Fast
+        Recommended if you have the Memcached
+
+    CHI::Driver::File
+        Recommended if you want to use the file caching instead the
+        Memcached for example
 

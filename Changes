@@ -1,3 +1,8 @@
+0.1
+    - Changed API of execution 'code' of rules
+    - Now you can use instances of CHI::Cascade::Rule in your target codes
+    - Now you can pass any parameters to target codes described in rules
+
 0.05
     - More improved the test t/03_memcached_multi.t
     - Tests with memcached for root user are not started (passed)
