@@ -57,9 +57,22 @@ DESCRIPTION
 
 CONSTRUCTOR
     $cascade = CHI::Cascade->new( %options )
-        This method constructs a new "CHI::Cascade" object and returns it.
-        Key/value pair arguments may be provided to set up the initial
-        state. Now there is only one option: *chi* - instance of CHI object.
+
+    This method constructs a new "CHI::Cascade" object and returns it.
+    Key/value pair arguments may be provided to set up the initial state.
+    Options are:
+
+    chi Required. Instance of CHI object. The CHI::Cascade doesn't construct
+        this object for you. Please create instance of "CHI" yourself.
+
+    busy_lock
+        Optional. Default is *never*. *This is not "busy_lock" option of
+        CHI!* This is amount of time (to see "DURATION EXPRESSIONS" in CHI)
+        until all target locks expire. When a target is recomputed it is
+        locked. If process is to be recomputing target and it will die or OS
+        will be hangs up we can dead locks and locked target will never
+        recomputed again. This option helps to avoid it. You can set up a
+        special busy_lock for rules too.
 
 METHODS
     rule( %options )
@@ -116,6 +129,15 @@ METHODS
             You can pass in your code any additional parameters by this
             option. These parameters are accessed in your code through
             params method of CHI::Cascade::Rule instance object.
+
+        busy_lock
+            Optional. Default is "busy_lock" of constructor or *never* if
+            first is not defined. *This is not "busy_lock" option of CHI!*
+            This is amount of time (to see "DURATION EXPRESSIONS" in CHI)
+            until target lock expires. When a target is recomputed it is
+            locked. If process is to be recomputing target and it will die
+            or OS will be hangs up we can dead locks and locked target will
+            never recomputed again. This option helps to avoid it.
 
     run( $target )
         This method makes a cascade computing if need and returns value for

@@ -4,3 +4,4 @@ Notes.txt
 *.bak
 /Makefile
 *.tar.gz
+/CHI-Cascade-*/

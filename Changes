@@ -1,3 +1,9 @@
+0.11
+    - Fixed bug (sometime dead locks were after target locking)
+    - Added 'busy_lock' option in contructor and to 'rule' method
+    - All 'set's in cache executed with expire as 'never' (excluding locking of
+      targets)
+
 0.1
     - Changed API of execution 'code' of rules
     - Now you can use instances of CHI::Cascade::Rule in your target codes

@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.10;
+our $VERSION = 0.11;
 
 use Carp;
 
@@ -70,25 +70,29 @@ sub get_value {
 }
 
 sub target_lock {
-    my ($self, $target) = @_;
+    my ($self, $rule) = @_;
 
-    my $trg_obj;
+    my ($trg_obj, $target);
+
+    $target = $rule->target;
 
     $trg_obj = CHI::Cascade::Target->new unless ( ( $trg_obj = $self->{chi}->get("t:$target") ) );
 
     $trg_obj->lock;
-    $self->{chi}->set("t:$target", $trg_obj);
+    $self->{chi}->set( "t:$target", $trg_obj, $rule->{busy_lock} || $self->{busy_lock} || 'never' );
 
     $self->{target_locks}{$target} = 1;
 }
 
 sub target_unlock {
-    my ($self, $target, $value) = @_;
+    my ($self, $rule, $value) = @_;
+
+    my $target = $rule->target;
 
     if ( my $trg_obj = $self->{chi}->get("t:$target") ) {
 	$trg_obj->unlock;
-	$trg_obj->touch if $value->recomputed;
-	$self->{chi}->set("t:$target", $trg_obj);
+	$trg_obj->touch if $value && $value->recomputed;
+	$self->{chi}->set( "t:$target", $trg_obj, 'never' );
 
 	delete $self->{target_locks}{$target};
     }
@@ -99,7 +103,7 @@ sub touch {
 
     if ( my $trg_obj = $self->{chi}->get("t:$target") ) {
 	$trg_obj->touch;
-	$self->{chi}->set("t:$target", $trg_obj);
+	$self->{chi}->set( "t:$target", $trg_obj, 'never' );
     }
 }
 
@@ -120,7 +124,7 @@ sub recompute {
 
     my $value;
 
-    $self->{chi}->set("v:$target", $value = CHI::Cascade::Value->new->value($ret));
+    $self->{chi}->set( "v:$target", $value = CHI::Cascade::Value->new->value($ret), 'never' );
     $value->recomputed(1);
 }
 
@@ -149,7 +153,7 @@ sub value_ref_if_recomputed {
 	return $value if $value->is_value;
 
 	# If no in cache - we should recompute it again
-	$self->target_lock($target);
+	$self->target_lock($rule);
     }
 
     my $ret = eval {
@@ -161,13 +165,13 @@ sub value_ref_if_recomputed {
 	    die qq{Found a circled rule (target: $dep_target)"}
 	      if ! $only_from_cache && exists $self->{chain}{ $dep_values{$dep_target}->[0] = $self->find($dep_target) };
 
-	    $self->target_lock($target)
+	    $self->target_lock($rule)
 	      if (   ! $only_from_cache
 		  && ( ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->recomputed
 		  || ( $self->target_time($dep_target) > $self->target_time($target) ) ) );
 	}
 
-	$self->target_lock($target) if ! $self->target_time($target);
+	$self->target_lock($rule) if ! $self->target_time($target);
 
 	if ( $self->target_locked($target) ) {
 	    # We should recompute this target
@@ -187,7 +191,7 @@ sub value_ref_if_recomputed {
     };
 
     my $e = $@;
-    $self->target_unlock($target, $ret)
+    $self->target_unlock($rule, $ret)
       if $self->target_locked($target);
     die $e if $e;
 
@@ -310,13 +314,27 @@ already work. You can take a look for t/* tests as examples.
 
 =head1 CONSTRUCTOR
 
-=over
-
-=item $cascade = CHI::Cascade->new( %options )
+$cascade = CHI::Cascade->new( %options )
 
 This method constructs a new C<CHI::Cascade> object and returns it.
 Key/value pair arguments may be provided to set up the initial state.
-Now there is only one option: I<chi> - instance of L<CHI> object.
+Options are:
+
+=over
+
+=item chi
+
+Required. Instance of L<CHI> object. The L<CHI::Cascade> doesn't construct this
+object for you. Please create instance of C<CHI> yourself.
+
+=item busy_lock
+
+Optional. Default is I<never>. I<This is not C<busy_lock> option of CHI!> This
+is amount of time (to see L<CHI/"DURATION EXPRESSIONS">) until all target locks
+expire. When a target is recomputed it is locked. If process is to be
+recomputing target and it will die or OS will be hangs up we can dead locks and
+locked target will never recomputed again. This option helps to avoid it. You
+can set up a special busy_lock for rules too.
 
 =back
 
@@ -386,6 +404,15 @@ last will not be executed (The C<run> will return C<undef>).
 You can pass in your code any additional parameters by this option. These
 parameters are accessed in your code through L<params|CHI::Cascade::Rule/params>
 method of L<CHI::Cascade::Rule> instance object.
+
+=item busy_lock
+
+Optional. Default is L</busy_lock> of constructor or I<never> if first is not
+defined. I<This is not C<busy_lock> option of CHI!> This is amount of time (to
+see L<CHI/"DURATION EXPRESSIONS">) until target lock expires. When a target is
+recomputed it is locked. If process is to be recomputing target and it will die
+or OS will be hangs up we can dead locks and locked target will never recomputed
+again. This option helps to avoid it.
 
 =back
 
