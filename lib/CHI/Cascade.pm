@@ -7,7 +7,7 @@ our $VERSION = 0.12;
 
 use Carp;
 
-use CHI::Cascade::Value;
+use CHI::Cascade::Value ':bits';
 use CHI::Cascade::Rule;
 use CHI::Cascade::Target;
 
@@ -65,8 +65,11 @@ sub target_time {
 sub get_value {
     my ($self, $target) = @_;
 
-    $self->{chi}->get("v:$target")
-      or CHI::Cascade::Value->new;
+    my $value = $self->{chi}->get("v:$target");
+
+    return $value->bits( CASCADE_FROM_CACHE ) if ($value);
+
+    CHI::Cascade::Value->new(bits => CASCADE_NO_CACHE);
 }
 
 sub target_lock {
@@ -98,6 +101,13 @@ sub target_unlock {
     }
 }
 
+sub target_remove {
+    my ($self, $target) = @_;
+
+    $self->{chi}->remove("t:$target");
+}
+
+
 sub touch {
     my ($self, $target) = @_;
 
@@ -125,7 +135,7 @@ sub recompute {
     my $value;
 
     $self->{chi}->set( "v:$target", $value = CHI::Cascade::Value->new->value($ret), 'never' );
-    $value->recomputed(1);
+    $value->recomputed(1)->bits(CASCADE_ACTUAL_VALUE | CASCADE_COMPUTED_NOW);
 }
 
 sub value_ref_if_recomputed {
@@ -140,7 +150,7 @@ sub value_ref_if_recomputed {
     if ( $self->target_computing($target) ) {
 	# If we have any target as a being computed (dependencie/original)
 	# there is no need to compute anything - trying to return original target value
-	die $self->get_value($self->{orig_target});
+	die $self->get_value($self->{orig_target})->bits( CASCADE_COMPUTING );
     }
 
     my ( %dep_values, $dep_name );
@@ -189,7 +199,7 @@ sub value_ref_if_recomputed {
 	return $self->recompute( $rule, $target, { map { $_ => $dep_values{$_}->[1]->value } keys %dep_values } )
 	  if $self->target_locked($target);
 
-	return undef;
+	return CHI::Cascade::Value->new( bits => CASCADE_ACTUAL_VALUE );
     };
 
     my $e = $@;
@@ -213,7 +223,21 @@ sub run {
 
 	my $value = $self->value_ref_if_recomputed( $self->find($target), $target );
 
-	return $self->get_value( $target ) unless ($value->is_value);
+	if ( ! $value->is_value ) {
+	    my $from_cache = $self->get_value( $target );
+
+	    if ($value->bits & CASCADE_ACTUAL_VALUE) {
+		if ( $from_cache->is_value ) {
+		    $from_cache->bits( CASCADE_ACTUAL_VALUE );
+		}
+		else {
+		    # Target marker is in cache but value is no there
+		    $self->target_remove($target);
+		}
+	    }
+	    return $from_cache;
+	}
+
 	return $value;
     };
 
