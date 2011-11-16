@@ -25,7 +25,7 @@ sub unlock {
 }
 
 sub time {
-    shift->{time};
+    shift->{time} || 0;
 }
 
 sub touch {

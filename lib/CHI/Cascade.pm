@@ -119,7 +119,8 @@ sub recompute {
     $self->{stats}{recompute}++;
 
     if ($@) {
-	die "CHI::Cascade: the target $target - error in the code: $@";
+	my $error = $@;
+	die( (eval { $error->isa('CHI::Cascade::Value') }) ? $error : "CHI::Cascade: the target $target - error in the code: $error" );
     }
 
     my $value;
