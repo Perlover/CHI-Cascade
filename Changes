@@ -1,3 +1,11 @@
+0.13 (stable)
+    1) Fix bug - sometimes generated warnging for trigger time (was undefined)
+    2) Now a compute code can catch die with CHI::Cascade::Value object - this value
+       will be returned from run method but value will not be saved in cache as
+       computed value
+    3) Improved a behavior with some buggy situations with cache (cache doesn't
+       save a value by some reasons for example)
+
 0.12
     - More stable version as i think ;-) Please use it
     - Improved signal handling in tests (for memcached killing)
