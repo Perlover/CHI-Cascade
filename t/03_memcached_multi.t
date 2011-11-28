@@ -6,7 +6,7 @@ use CHI::Cascade;
 
 use IO::Handle;
 use Storable	qw(store_fd fd_retrieve);
-use Time::HiRes	qw(sleep time);
+use Time::HiRes	qw(sleep alarm time);
 
 use constant DELAY	=> 2.0;
 
@@ -84,10 +84,6 @@ $SIG{__DIE__} = sub {
     unlink $socket_file	unless -l $socket_file;
     $SIG{__DIE__} = 'IGNORE';
 };
-
-alarm( DELAY * 4 + 1 );
-
-$SIG{ALRM} = sub { die "Alarmed!" };
 
 start_parent_commanding();
 
@@ -263,7 +259,10 @@ sub set_cascade_rules {
 	target		=> 'big_array',
 	depends		=> 'big_array_trigger',
 	code		=> sub {
-	    sleep $delay;
+	    if ($delay) {
+		alarm(0);
+		sleep $delay;
+	    }
 	    return $big_array_type ? [ 101 .. 1000 ] : [ 1 .. 1000 ];
 	}
     );
@@ -276,7 +275,10 @@ sub set_cascade_rules {
 
 	    my ($page) = $target =~ /^one_page_(\d+)$/;
 
-	    sleep $delay;
+	    if ($delay) {
+		alarm(0);
+		sleep $delay;
+	    }
 	    my $ret = [ @{$values->{big_array}}[ ($page * 10) .. (( $page + 1 ) * 10 - 1) ] ];
 	    $ret;
 	}

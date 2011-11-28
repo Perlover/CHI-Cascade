@@ -46,27 +46,29 @@ $cascade->rule(
     }
 );
 
-ok( $cascade->{stats}{recompute} == 0, 'recompute stats');
+ok( $cascade->{stats}{recompute} == 0, 'recompute stats - 1');
 
 is_deeply( $cascade->run('one_page_0'), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache');
-ok( $cascade->{stats}{recompute} == 2, 'recompute stats');
+ok( $cascade->{stats}{recompute} == 2, 'recompute stats - 2');
 
 is_deeply( $cascade->run('one_page_1'), [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ], '1th page from cache');
-ok( $cascade->{stats}{recompute} == 3, 'recompute stats');
+ok( $cascade->{stats}{recompute} == 3, 'recompute stats - 3');
 
 is_deeply( $cascade->run('one_page_0'), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache');
-ok( $cascade->{stats}{recompute} == 3, 'recompute stats');
+ok( $cascade->{stats}{recompute} == 3, 'recompute stats - 4');
+
+sleep 1;
 
 # To force recalculate dependencied
 $cascade->touch('big_array');
 
 is_deeply( $cascade->run('one_page_0'), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache after touching');
-ok( $cascade->{stats}{recompute} == 4, 'recompute stats');
+cmp_ok( $cascade->{stats}{recompute}, '==', 4, 'recompute stats - 5');
 
 is_deeply( $cascade->run('one_page_1'), [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ], '1th page from cache after touching');
-ok( $cascade->{stats}{recompute} == 5, 'recompute stats');
+cmp_ok( $cascade->{stats}{recompute}, '==', 5, 'recompute stats - 6');
 
 is_deeply( $cascade->run('one_page_0'), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache');
-ok( $cascade->{stats}{recompute} == 5, 'recompute stats');
+cmp_ok( $cascade->{stats}{recompute}, '==', 5, 'recompute stats - 7');
 
 $SIG{__DIE__}->();

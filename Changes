@@ -1,6 +1,10 @@
+0.14 (stable)
+    1) Improved tests in accordance with reports version 0.13
+    2) Fixed few misprints in Changes & TODO files
+
 0.13 (stable)
     1) Fix bug - sometimes generated warnging for trigger time (was undefined)
-    2) Now a compute code can catch die with CHI::Cascade::Value object - this value
+    2) Now a compute code can throw die with CHI::Cascade::Value object - this value
        will be returned from run method but value will not be saved in cache as
        computed value
     3) Improved a behavior with some buggy situations with cache (cache doesn't

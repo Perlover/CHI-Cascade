@@ -1,5 +1,6 @@
 I would want to do (may be you want to do yourself and push request to github?:)
 
-    - To add doc for die CHI::Cascade::Value from compute code
+    - To add doc for throwing a object of CHI::Cascade::Value from compute code
     - Make tests for dependence type as sub {...} (not checked)
-    - To need corrections of my English in docs (my English is not well as i want)
+    - To need corrections of my English in docs (my English is not well as i
+      want)
