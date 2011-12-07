@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.14;
+our $VERSION = 0.15;
 
 use Carp;
 
@@ -378,9 +378,9 @@ scalar text or C<Regexp> object created through C<qr//>
 
 =item depends
 
-B<Optional.> The B<scalar>, B<arrayref> or B<coderef> value of dependencies.
+B<Optional.> The B<scalar>, B<arrayref> or B<coderef> values of dependencies.
 This is the definition of target(s) from which this current rule is dependent.
-If L<depends> is:
+If I<depends> is:
 
 =over
 
@@ -392,26 +392,22 @@ It should be plain text of single dependence of this target.
 
 An each item of list can be scalar value (exactly matched target) or code
 reference. A subroutine should return a scalar value as current dependence for
-this run time. It will get a parameters from C<=~> operator against C<target>
-matching from C<qr//> operator if target is C<Regexp> object type - please see
-the section L</EXAMPLE> for this example.
+this target at runtime. It will get a parameters from C<=~> operator against
+C<target> matching from C<qr//> operator if target is C<Regexp> object type -
+please see the section L</EXAMPLE> for this example.
 
 =item coderef
 
-This subroutine will be executed every time inside L<run> method if necessary.
+This subroutine will be executed every time inside I<run> method if necessary.
 It will get a parameters from C<=~> operator against C<target> matching from
 C<qr//> operator if target is C<Regexp> object type. It should return B<scalar>
 or B<arrayref>. The returned value is I<scalar> it will be considered as single
-dependence of this target and behavior will be exactly as described for
-I<scalar> in this paragraph. If returned value is I<arrayref> it will be
-considered as list of dependencies for this target and behavior will be exactly
-as described for I<arrayref> in this paragraph.
+dependence of this target and the behavior will be exactly as described for
+I<scalar> in this paragraph. If the returned value is I<arrayref> it will be
+considered as list of dependencies for this target and the behavior will be
+exactly as described for I<arrayref> in this paragraph.
 
 =back
-
-A code subroutine will get a parameters from C<=~> operator against C<target>
-matching by C<qr//> operator(not tested while) - please see the section
-L</EXAMPLE> for this example.
 
 =item code
 
@@ -484,7 +480,7 @@ appropriate ones.
 This module is experimental and not finished for new features ;-)
 Please send me issues through L<https://github.com/Perlover/CHI-Cascade> page
 
-=head1 CHI::Cascade & make
+=head1 ANALOGIES WITH make
 
 Here simple example how it works. Here is a direct analogy to Unix make
 utility:

@@ -82,23 +82,44 @@ METHODS
         The keys of %options are:
 
         target
-            A target for "run" and for searching of "depends". It can be as
-            scalar text or "Regexp" object created through "qr//"
+            Required. A target for "run" and for searching of "depends". It
+            can be as scalar text or "Regexp" object created through "qr//"
 
         depends
-            The list or a scalar value of dependencies - the list of targets
-            which the current rule is dependent. Each item can be scalar
-            value (exactly matched target) or code reference which will be
-            executed during matching of target. A code subroutine will get a
-            parameters from "=~" operator against "target" matching by
-            "qr//" operator(not tested while) - please see the section
-            "EXAMPLE" for this example.
+            Optional. The scalar, arrayref or coderef values of
+            dependencies. This is the definition of target(s) from which
+            this current rule is dependent. If *depends* is:
+
+            scalar
+                It should be plain text of single dependence of this target.
+
+            arrayref
+                An each item of list can be scalar value (exactly matched
+                target) or code reference. A subroutine should return a
+                scalar value as current dependence for this target at
+                runtime. It will get a parameters from "=~" operator against
+                "target" matching from "qr//" operator if target is "Regexp"
+                object type - please see the section "EXAMPLE" for this
+                example.
+
+            coderef
+                This subroutine will be executed every time inside *run*
+                method if necessary. It will get a parameters from "=~"
+                operator against "target" matching from "qr//" operator if
+                target is "Regexp" object type. It should return scalar or
+                arrayref. The returned value is *scalar* it will be
+                considered as single dependence of this target and the
+                behavior will be exactly as described for *scalar* in this
+                paragraph. If the returned value is *arrayref* it will be
+                considered as list of dependencies for this target and the
+                behavior will be exactly as described for *arrayref* in this
+                paragraph.
 
         code
-            The code reference for computing a value of this target. Will be
-            executed if no value in cache for this target or any dependence
-            or dependences of dependences and so on will be recomputed. Will
-            be executed as $code->( $rule, $target,
+            Required. The code reference for computing a value of this
+            target. Will be executed if no value in cache for this target or
+            any dependence or dependences of dependences and so on will be
+            recomputed. Will be executed as $code->( $rule, $target,
             $hashref_to_value_of_dependencies ) *(The API of running this
             code was changed since v0.10)*
 
@@ -154,7 +175,7 @@ STATUS
     This module is experimental and not finished for new features ;-) Please
     send me issues through <https://github.com/Perlover/CHI-Cascade> page
 
-CHI::Cascade & make
+ANALOGIES WITH make
     Here simple example how it works. Here is a direct analogy to Unix make
     utility:
 

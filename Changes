@@ -1,7 +1,10 @@
-current
+0.15
     1) Corrections if cascade rules have a 'depends' option as coderef. Backward
        compatible. Now coderef can return arrayref of dependencies. Before it
        could return only one dependence as plain text. No tests yet for this
+    2) Tests are rewritten and optimised
+    3) Added a FastMmap driver's tests
+    4) Added tests when dependencies are coderef (t/lib/test_02.pm)
 
 0.14 (stable)
     1) Improved tests in accordance with reports version 0.13

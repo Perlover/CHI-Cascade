@@ -20,7 +20,11 @@ MYMETA.json
 MYMETA.yml
 README
 t/00_compile.t
-t/01_memcached.t
-t/02_file_cache.t
-t/03_memcached_multi.t
+t/01_fast_mmap.t
+t/02_memcached.t
+t/03_file_cache.t
+t/04_memcached_multi.t
+t/05_fast_mmap.t
+t/lib/test_01.pm
+t/lib/test_02.pm
 TODO
