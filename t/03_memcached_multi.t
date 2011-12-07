@@ -44,7 +44,7 @@ $SIG{TERM} = $SIG{INT} = $SIG{HUP} = sub { die "Terminated by " . shift };
 sleep 1;
 
 if ( $? || ! (-f $pid_file )) {
-    chomp $out;
+    ( defined($out) && chomp($out) ) || ( $out = '' );
     plan skip_all => "Cannot start the memcached for this test ($out)";
 }
 

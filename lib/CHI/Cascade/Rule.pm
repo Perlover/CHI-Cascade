@@ -8,7 +8,7 @@ sub new {
 
     my $from = ref($class) ? $class : \%opts;
 
-    $opts{depends} = [ defined( $opts{depends} ) ? ( $opts{depends} ) : () ] unless ref($opts{depends}) eq 'ARRAY';
+    $opts{depends} = [ defined( $opts{depends} ) ? ( $opts{depends} ) : () ] unless ref( $opts{depends} );
 
     # To do clone or new object
     bless {
@@ -31,7 +31,18 @@ sub qr_params {
     }
 }
 
-sub depends	{ shift->{depends}		}
+sub depends {
+    my $self = shift;
+
+    if ( ref( $self->{depends} ) eq 'CODE' ) {
+	my $res = $self->{depends}->( $self->qr_params );
+
+	return ref($res) eq 'ARRAY' ? $res : [ $res ];
+    }
+
+    return $self->{depends};
+}
+
 sub target	{ shift->{matched_target}	}
 sub params	{ shift->{params}		}
 sub dep_values	{ shift->{dep_values}		}

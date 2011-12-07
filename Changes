@@ -1,3 +1,8 @@
+current
+    1) Corrections if cascade rules have a 'depends' option as coderef. Backward
+       compatible. Now coderef can return arrayref of dependencies. Before it
+       could return only one dependence as plain text. No tests yet for this
+
 0.14 (stable)
     1) Improved tests in accordance with reports version 0.13
     2) Fixed few misprints in Changes & TODO files
