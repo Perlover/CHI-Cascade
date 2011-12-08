@@ -473,6 +473,13 @@ utility of Unix and behaviour as L<make> after it. After L</touch> all targets
 are dependent from this target will be recomputed at next L</run> with an
 appropriate ones.
 
+=item target_remove ( $target )
+
+It's like a removing of target file in make. You can force to recompute target
+by this method. It will remove target marker if one exists and once when cascade
+will need target value it will be recomputed. In a during recomputing of course
+cascade will return an old value if one exists in cache.
+
 =back
 
 =head1 STATUS
