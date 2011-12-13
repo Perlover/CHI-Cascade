@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.15;
+our $VERSION = 0.16;
 
 use Carp;
 
@@ -30,7 +30,7 @@ sub new {
 sub rule {
     my ($self, %opts) = @_;
 
-    my $rule = CHI::Cascade::Rule->new( %opts );
+    my $rule = CHI::Cascade::Rule->new( cascade => $self, %opts );
 
     if (ref($rule->{target}) eq 'Regexp') {
 	push @{ $self->{qr_targets} }, $rule;
@@ -167,7 +167,7 @@ sub value_ref_if_recomputed {
 	my $dep_target;
 
 	foreach my $depend (@{ $rule->depends }) {
-	    $dep_target = ref($depend) eq 'CODE' ? $depend->(@qr_params) : $depend;
+	    $dep_target = ref($depend) eq 'CODE' ? $depend->( $rule, @qr_params ) : $depend;
 
 	    $dep_values{$dep_target}->[0] = $self->find($dep_target);
 
@@ -391,21 +391,22 @@ It should be plain text of single dependence of this target.
 =item arrayref
 
 An each item of list can be scalar value (exactly matched target) or code
-reference. A subroutine should return a scalar value as current dependence for
-this target at runtime. It will get a parameters from C<=~> operator against
-C<target> matching from C<qr//> operator if target is C<Regexp> object type -
-please see the section L</EXAMPLE> for this example.
+reference. If item is coderef it will be executed as $coderef->( $rule,
+L<$rule-E<gt>qr_params|CHI::Cascade::Rule/qr_params> ) and should return a
+scalar value as current dependence for this target at runtime (the API for
+coderef parameters was changed since v0.16)
 
 =item coderef
 
-This subroutine will be executed every time inside I<run> method if necessary.
-It will get a parameters from C<=~> operator against C<target> matching from
-C<qr//> operator if target is C<Regexp> object type. It should return B<scalar>
-or B<arrayref>. The returned value is I<scalar> it will be considered as single
-dependence of this target and the behavior will be exactly as described for
-I<scalar> in this paragraph. If the returned value is I<arrayref> it will be
-considered as list of dependencies for this target and the behavior will be
-exactly as described for I<arrayref> in this paragraph.
+This subroutine will be executed every time inside I<run> method if necessary
+and with parameters as: $coderef->( $rule,
+L<$rule-E<gt>qr_params|CHI::Cascade::Rule/qr_params> ) (API was changed since
+v0.16). It should return B<scalar> or B<arrayref>. The returned value is
+I<scalar> it will be considered as single dependence of this target and the
+behavior will be exactly as described for I<scalar> in this paragraph. If the
+returned value is I<arrayref> it will be considered as list of dependencies for
+this target and the behavior will be exactly as described for I<arrayref> in
+this paragraph.
 
 =back
 
@@ -544,7 +545,7 @@ And even we can have a same rule:
 
     $cascade->rule(
 	target	=> qr/^unique_name_(.*)$/,
-	depends	=> sub { 'unique_name_other_' . $_[0] },
+	depends	=> sub { 'unique_name_other_' . $_[1] },
 	code	=> sub {
 	    my ($rule, $target_name, $values_of_depends) = @_;
 

@@ -1,3 +1,11 @@
+0.16
+    1) Changed API for coderef's subroutines in 'depends' of rules. Now first
+       parameter is reference to CHI::Cascade::Rule object and other are
+       'qr_params'
+    2) CHI::Cascade::Rule object now has a method 'cascade' which returns a
+       CHI::Cascade instance for this rule. You can use it in 'depends'
+       subroutines
+
 0.15
     1) Corrections if cascade rules have a 'depends' option as coderef. Backward
        compatible. Now coderef can return arrayref of dependencies. Before it

@@ -13,6 +13,7 @@ license 'perl';
 
 requires 'CHI';
 requires 'Time::HiRes';
+requires 'Scalar::Util';
 
 build_requires 'Test::More';
 build_requires 'Test::Base';
