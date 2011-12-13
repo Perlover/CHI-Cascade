@@ -3,6 +3,8 @@ package CHI::Cascade::Rule;
 use strict;
 use warnings;
 
+use Scalar::Util 'weaken';
+
 sub new {
     my ($class, %opts) = @_;
 
@@ -11,13 +13,17 @@ sub new {
     $opts{depends} = [ defined( $opts{depends} ) ? ( $opts{depends} ) : () ] unless ref( $opts{depends} );
 
     # To do clone or new object
-    bless {
+    my $self = bless {
 	map({ $_ => $from->{$_}}
 	  grep { exists $from->{$_} }
-	  qw( target depends code params busy_lock )),
+	  qw( target depends code params busy_lock cascade )),
 	qr_params	=> [],
 	matched_target	=> undef
     }, ref($class) || $class;
+
+    weaken $self->{cascade};	# It is against memory leaks
+
+    $self;
 }
 
 sub qr_params {
@@ -35,7 +41,7 @@ sub depends {
     my $self = shift;
 
     if ( ref( $self->{depends} ) eq 'CODE' ) {
-	my $res = $self->{depends}->( $self->qr_params );
+	my $res = $self->{depends}->( $self, $self->qr_params );
 
 	return ref($res) eq 'ARRAY' ? $res : [ $res ];
     }
@@ -45,6 +51,7 @@ sub depends {
 
 sub target	{ shift->{matched_target}	}
 sub params	{ shift->{params}		}
+sub cascade	{ shift->{cascade}		}
 sub dep_values	{ shift->{dep_values}		}
 
 1;
@@ -81,10 +88,10 @@ method|CHI::Cascade/rule>.
 
 =head1 DESCRIPTION
 
-The instance of this object is passed to L<your code|CHI::Cascade/code> by
-L<CHI::Cascade> as first argument I<(The API of running this code was changed
-since v0.10)> You can use it object as accessor to some parameters of your
-currect executed target.
+The instance of this object is passed to L<your code|CHI::Cascade/code>,
+L<dependencies coderefs|CHI::Cascade/coderef> by L<CHI::Cascade> as first
+argument I<(The API of running this code was changed since v0.16)> You can use
+it object as accessor to some parameters of your currect executed target.
 
 =head1 METHODS
 
@@ -100,7 +107,8 @@ described for L<rule|CHI::Cascade/rule> through C<qr//> operator.
 returns arrayref of dependencies (L<depends|CHI::Cascade/depends> option of
 L<rule|CHI::Cascade/rule> method) even if one scalar value is passed there (as
 one dependence). Always is defined even there no defined C<depends> option for
-C<rule>.
+C<rule>. If L<'depends'|CHI::Cascade/depends> is coderef you will get a returned
+value of one.
 
 =item target
 
@@ -109,6 +117,10 @@ returns current target as plain text after matching.
 =item params
 
 returns any data of any type what were passed to L<params|CHI::Cascade/params>
+
+=item cascade
+
+returns reference to L<CHI::Cascade> instance object for this rule.
 
 =back
 

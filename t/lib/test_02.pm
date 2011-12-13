@@ -21,7 +21,7 @@ sub test_cascade {
 
     $cascade->rule(
 	target		=> qr/^one_page_(\d+)$/,
-	depends		=> sub { [ 'big_array' ] },
+	depends		=> sub { isa_ok( $_[0], 'CHI::Cascade::Rule' ); ok( $_[1] =~ /^\d+$/o); [ 'big_array' ] },
 	code		=> sub {
 	    my ($rule) = @_;
 
@@ -34,7 +34,7 @@ sub test_cascade {
 
     $cascade->rule(
 	target		=> 'one_page_1',
-	depends		=> [ sub { 'big_array' } ],
+	depends		=> [ sub { isa_ok( $_[0], 'CHI::Cascade::Rule' ); 'big_array' } ],
 	code		=> sub {
 	    my ($rule) = @_;
 

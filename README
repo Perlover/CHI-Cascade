@@ -95,25 +95,23 @@ METHODS
 
             arrayref
                 An each item of list can be scalar value (exactly matched
-                target) or code reference. A subroutine should return a
-                scalar value as current dependence for this target at
-                runtime. It will get a parameters from "=~" operator against
-                "target" matching from "qr//" operator if target is "Regexp"
-                object type - please see the section "EXAMPLE" for this
-                example.
+                target) or code reference. If item is coderef it will be
+                executed as $coderef->( $rule, $rule->qr_params ) and should
+                return a scalar value as current dependence for this target
+                at runtime (the API for coderef parameters was changed since
+                v0.16)
 
             coderef
                 This subroutine will be executed every time inside *run*
-                method if necessary. It will get a parameters from "=~"
-                operator against "target" matching from "qr//" operator if
-                target is "Regexp" object type. It should return scalar or
-                arrayref. The returned value is *scalar* it will be
-                considered as single dependence of this target and the
-                behavior will be exactly as described for *scalar* in this
-                paragraph. If the returned value is *arrayref* it will be
-                considered as list of dependencies for this target and the
-                behavior will be exactly as described for *arrayref* in this
-                paragraph.
+                method if necessary and with parameters as: $coderef->(
+                $rule, $rule->qr_params ) (API was changed since v0.16). It
+                should return scalar or arrayref. The returned value is
+                *scalar* it will be considered as single dependence of this
+                target and the behavior will be exactly as described for
+                *scalar* in this paragraph. If the returned value is
+                *arrayref* it will be considered as list of dependencies for
+                this target and the behavior will be exactly as described
+                for *arrayref* in this paragraph.
 
         code
             Required. The code reference for computing a value of this
@@ -171,6 +169,13 @@ METHODS
         all targets are dependent from this target will be recomputed at
         next "run" with an appropriate ones.
 
+    target_remove ( $target )
+        It's like a removing of target file in make. You can force to
+        recompute target by this method. It will remove target marker if one
+        exists and once when cascade will need target value it will be
+        recomputed. In a during recomputing of course cascade will return an
+        old value if one exists in cache.
+
 STATUS
     This module is experimental and not finished for new features ;-) Please
     send me issues through <https://github.com/Perlover/CHI-Cascade> page
@@ -224,7 +229,7 @@ EXAMPLE
 
         $cascade->rule(
             target  => qr/^unique_name_(.*)$/,
-            depends => sub { 'unique_name_other_' . $_[0] },
+            depends => sub { 'unique_name_other_' . $_[1] },
             code    => sub {
                 my ($rule, $target_name, $values_of_depends) = @_;
 
