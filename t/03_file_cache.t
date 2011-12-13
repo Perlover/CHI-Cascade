@@ -11,7 +11,7 @@ use CHI::Cascade;
 plan skip_all => 'Not installed CHI::Driver::File'
   unless eval "use CHI::Driver::File; 1";
 
-plan tests => 14;
+plan tests => 15;
 
 $SIG{__DIE__} = sub {
     `{ rm -rf t/file_cache; } >/dev/null 2>&1`;

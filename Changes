@@ -1,3 +1,6 @@
+0.17
+    1) Added a callback function in rule as 'recomputed'
+
 0.16
     1) Changed API for coderef's subroutines in 'depends' of rules. Now first
        parameter is reference to CHI::Cascade::Rule object and other are

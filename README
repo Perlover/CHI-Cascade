@@ -158,6 +158,29 @@ METHODS
             or OS will be hangs up we can dead locks and locked target will
             never recomputed again. This option helps to avoid it.
 
+        recomputed
+            Optional. This is a recomputed callback (coderef). If target of
+            this rule was recomputed this callback will be executed right
+            away after recomputed value has been saved in cache. The
+            callback will be executed as $coderef->( $rule, $target, $value
+            ) where are:
+
+            $rule
+                An instance of CHI::Cascade::Rule class. This instance is
+                recreated for every target searching and recomputing if
+                need.
+
+            $target
+                A current target as string
+
+            $value
+                The instance of CHI::Cascade::Value class. You can use a
+                recomputed value as $value->value
+
+            For example you can use this callback for notifying of other
+            sites that your target's value has been changed and is already
+            in cache.
+
     run( $target )
         This method makes a cascade computing if need and returns value for
         this target If any dependence of this target of any dependencies of

@@ -7,6 +7,8 @@ use parent 'Exporter';
 
 our @EXPORT = qw(test_cascade);
 
+my $recomputed;
+
 sub test_cascade {
     my $cascade = shift;
 
@@ -16,7 +18,8 @@ sub test_cascade {
 	target		=> 'big_array',
 	code		=> sub {
 	    return [ 1 .. 1000 ];
-	}
+	},
+	recomputed	=> sub { $recomputed++ }
     );
 
     $cascade->rule(
@@ -29,13 +32,14 @@ sub test_cascade {
 
 	    my $ret = [ @{$rule->dep_values->{big_array}}[ ($page * 10) .. (( $page + 1 ) * 10 - 1) ] ];
 	    $ret;
-	}
+	},
+	recomputed	=> sub { $recomputed++ }
     );
 
     ok( $cascade->{stats}{recompute} == 0, 'recompute stats - 1');
 
     is_deeply( $cascade->run('one_page_0'), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache');
-    ok( $cascade->{stats}{recompute} == 2, 'recompute stats - 2');
+    ok( $cascade->{stats}{recompute} == 2 && $recomputed == 2, 'recompute stats - 2');
 
     is_deeply( $cascade->run('one_page_1'), [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ], '1th page from cache');
     ok( $cascade->{stats}{recompute} == 3, 'recompute stats - 3');
@@ -56,6 +60,8 @@ sub test_cascade {
 
     is_deeply( $cascade->run('one_page_0'), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache');
     cmp_ok( $cascade->{stats}{recompute}, '==', 5, 'recompute stats - 7');
+
+    ok( $cascade->{stats}{recompute} == $recomputed, 'recompute stats - 8');
 }
 
 1;

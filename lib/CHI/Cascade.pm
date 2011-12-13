@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.16;
+our $VERSION = 0.17;
 
 use Carp;
 
@@ -132,6 +132,7 @@ sub recompute {
     my $value;
 
     $self->{chi}->set( "v:$target", $value = CHI::Cascade::Value->new->value($ret), 'never' );
+    $rule->{recomputed}->( $rule, $target, $value ) if ( ref $rule->{recomputed} eq 'CODE' );
     return $value->recomputed(1);
 }
 
@@ -458,6 +459,34 @@ see L<CHI/"DURATION EXPRESSIONS">) until target lock expires. When a target is
 recomputed it is locked. If process is to be recomputing target and it will die
 or OS will be hangs up we can dead locks and locked target will never recomputed
 again. This option helps to avoid it.
+
+=item recomputed
+
+Optional. This is a recomputed callback (coderef). If target of this rule was
+recomputed this callback will be executed right away after recomputed value has
+been saved in cache. The callback will be executed as $coderef->( $rule,
+$target, $value ) where are:
+
+=over
+
+=item $rule
+
+An instance of L<CHI::Cascade::Rule> class. This instance is recreated for every
+target searching and recomputing if need.
+
+=item $target
+
+A current target as string
+
+=item $value
+
+The instance of L<CHI::Cascade::Value> class. You can use a recomputed value as
+$value->value
+
+=back
+
+For example you can use this callback for notifying of other sites that your
+target's value has been changed and is already in cache.
 
 =back
 

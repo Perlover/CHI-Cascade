@@ -16,7 +16,7 @@ sub new {
     my $self = bless {
 	map({ $_ => $from->{$_}}
 	  grep { exists $from->{$_} }
-	  qw( target depends code params busy_lock cascade )),
+	  qw( target depends code params busy_lock cascade recomputed )),
 	qr_params	=> [],
 	matched_target	=> undef
     }, ref($class) || $class;
