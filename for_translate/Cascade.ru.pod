@@ -1,3 +1,5 @@
+=encoding utf8
+
 =pod
 
 =head1 NAME
@@ -101,48 +103,49 @@ $cascade = CHI::Cascade->new( %options )
 
 =item rule( %options )
 
-To add new rule to C<CHI::Cascade> object. All rules should be added before
-first L</run> method
+Добавляет новое правило в C<CHI::Cascade> объект. Все правила должны быть добавлены перед первым вызовом L</run>
 
-The keys of %options are:
+Опции %options данного метода:
 
 =over
 
 =item target
 
-B<Required.> A target for L</run> and for searching of L</depends>. It can be as
-scalar text or C<Regexp> object created through C<qr//>
+B<Обязательно.> Цель (target) для метода L</run> и для зависимостей L</depends>
+в правилах. Может быть как обычным текстовым значением, так и C<Regexp> объектом
+созданным через C<qr//>
 
 =item depends
 
-B<Optional.> The B<scalar>, B<arrayref> or B<coderef> values of dependencies.
-This is the definition of target(s) from which this current rule is dependent.
-If I<depends> is:
+B<Опционально.> Должно быть одним из трёх типов: B<scalar>, B<arrayref> или
+B<coderef>. Оно определяет список зависимостей, от которых зависит цель,
+определяемая данным правилом Может быть одним из типов:
 
 =over
 
 =item scalar
 
-It should be plain text of single dependence of this target.
+Содержит имя только одной цели-зависимости, от которой зависит данная цель.
 
 =item arrayref
 
-An each item of list can be scalar value (exactly matched target) or code
-reference. A subroutine should return a scalar value as current dependence for
-this target at runtime. It will get a parameters from C<=~> operator against
-C<target> matching from C<qr//> operator if target is C<Regexp> object type -
-please see the section L</EXAMPLE> for this example.
+Массив целей-зависимостей. Каждый элемент может быть либо scalar типом,
+указывающим в точности на цель-зависимость, либо coderef (ссылка на функцию).
+Если последний тип, то для получения целей-зависимостей, CHI::Cascade вызовет
+эту функцию как $coderef->( $rule,
+L<$rule-E<gt>qr_params|CHI::Cascade::Rule/qr_params> ) и она должна вернуть
+scalar значение - точное название цели-зависимости во время исполнения (runtime)
 
 =item coderef
 
-This subroutine will be executed every time inside I<run> method if necessary.
-It will get a parameters from C<=~> operator against C<target> matching from
-C<qr//> operator if target is C<Regexp> object type. It should return B<scalar>
-or B<arrayref>. The returned value is I<scalar> it will be considered as single
-dependence of this target and the behavior will be exactly as described for
-I<scalar> in this paragraph. If the returned value is I<arrayref> it will be
-considered as list of dependencies for this target and the behavior will be
-exactly as described for I<arrayref> in this paragraph.
+Эта функция бует исполняться каждый раз внутри L<CHI::Cascade/run> метода со
+следующими параметрами: $coderef->( $rule,
+L<$rule-E<gt>qr_params|CHI::Cascade::Rule/qr_params> ). Она должна вернуть либо
+B<scalar>, либо B<arrayref>. Если B<scalar>, то оно будет расцениваться как
+единственное имя цели-зависимости и поведение cascade будет в точности, как
+описано выше для I<scalar> типа, описанного выше в данном параграфе. Если
+возвращённое значение I<arrayref>, оно будет рассматриваться как список
+целей-зависимостей - смотренно описание для I<arrayref> в данном параграфе
 
 =back
 
