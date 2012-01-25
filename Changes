@@ -1,4 +1,12 @@
-0.17
+0.18
+    +) Now if recompute function dies with exception of CHI::Cascade::Value type
+       (introduced in v.0.13) CHI::Cascade::run method will return old value of
+       target value from cache if exception's value is 'undef' and cache value
+       exists. Before the run method always returned a value of exception.
+    +) Imroved the documentation for CHI::Cascade::rule/code
+    +) Added the documentation of CHI::Cascade::Value
+
+0.17 (stable)
     1) Added a callback function in rule as 'recomputed'
 
 0.16

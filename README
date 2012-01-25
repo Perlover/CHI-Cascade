@@ -115,11 +115,20 @@ METHODS
 
         code
             Required. The code reference for computing a value of this
-            target. Will be executed if no value in cache for this target or
-            any dependence or dependences of dependences and so on will be
-            recomputed. Will be executed as $code->( $rule, $target,
-            $hashref_to_value_of_dependencies ) *(The API of running this
-            code was changed since v0.10)*
+            target (a recompute code). Will be executed if no value in cache
+            for this target or any dependence or dependences of dependences
+            and so on will be recomputed. Will be executed as "$code->(
+            $rule, $target, $hashref_to_value_of_dependencies )" *(The API
+            of running this code was changed since v0.10)*
+
+            If you want to terminate a code and to return immediately from
+            run method and don't want to save a value in cache you can throw
+            an exception from code of type CHI::Cascade::Value. Your
+            instance of CHI::Cascade::Value can have a value or cannot (a
+            valid value can be even "undef"!). A run method returns either a
+            value is set by you (through CHI::Cascade::Value::value method)
+            or value from cache or "undef" in other cases. Please to see
+            CHI::Cascade::Value
 
             $rule
                 An instance of CHI::Cascade::Rule object. You can use it

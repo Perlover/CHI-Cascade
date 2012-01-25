@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.17;
+our $VERSION = 0.18;
 
 use Carp;
 
@@ -189,7 +189,7 @@ sub value_ref_if_recomputed {
 	    foreach $dep_target (keys %dep_values) {
 		if ( ! $dep_values{$dep_target}->[1]->is_value ) {
 		    if ( ! ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target, 1 ) )->is_value ) {
-			warn "assertion: value of dependence '$dep_target' should be in cache but none there";
+			# warn "assertion: value of dependence '$dep_target' should be in cache but none there";
 			$self->target_remove($dep_target);
 			return undef;
 		    }
@@ -222,21 +222,20 @@ sub run {
     my $ret = eval {
 	$self->{orig_target} = $target;
 
-	my $value = $self->value_ref_if_recomputed( $self->find($target), $target );
-
-	if ( ! $value->is_value ) {
-	    $value = $self->get_value( $target );
-	    if ( ! $value->is_value ) {
-		$self->target_remove($target);
-		warn "assertion: value for target '$target' should be in cache but none there";
-	    }
-	}
-	return $value;
+	return $self->value_ref_if_recomputed( $self->find($target), $target );
     };
 
     if ($@) {
 	$ret = $@;
 	die $ret unless eval { $ret->isa('CHI::Cascade::Value') };
+    }
+
+    if ( ! $ret->is_value ) {
+	$ret = $self->get_value( $target );
+	if ( ! $ret->is_value ) {
+	    $self->target_remove($target);
+	    # warn "assertion: value for target '$target' should be in cache but none there";
+	}
     }
 
     return $ret->value;
@@ -413,11 +412,19 @@ this paragraph.
 
 =item code
 
-B<Required.> The code reference for computing a value of this target. Will be
-executed if no value in cache for this target or any dependence or dependences
-of dependences and so on will be recomputed. Will be executed as $code->( $rule,
-$target, $hashref_to_value_of_dependencies ) I<(The API of running this code was
-changed since v0.10)>
+B<Required.> The code reference for computing a value of this target (a
+recompute code). Will be executed if no value in cache for this target or
+any dependence or dependences of dependences and so on will be recomputed. Will
+be executed as C<< $code->( $rule, $target, $hashref_to_value_of_dependencies )
+>> I<(The API of running this code was changed since v0.10)>
+
+If you want to terminate a code and to return immediately from L<run> method and
+don't want to save a value in cache you can throw an exception from L<code> of
+type L<CHI::Cascade::Value>. Your instance of L<CHI::Cascade::Value> can have a
+value or cannot (a valid value can be even C<undef>!). A L<run> method returns
+either a value is set by you (through L<CHI::Cascade::Value::value> method) or
+value from cache or C<undef> in other cases. Please to see	
+L<CHI::Cascade::Value>
 
 =over
 
