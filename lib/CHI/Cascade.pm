@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.18;
+our $VERSION = 0.19;
 
 use Carp;
 
@@ -187,7 +187,9 @@ sub value_ref_if_recomputed {
 	    # We should recompute this target
 	    # So we should recompute values for other dependencies
 	    foreach $dep_target (keys %dep_values) {
-		if ( ! $dep_values{$dep_target}->[1]->is_value ) {
+		if (   ! defined $dep_values{$dep_target}->[1]
+		    || ! $dep_values{$dep_target}->[1]->is_value )
+		{
 		    if ( ! ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target, 1 ) )->is_value ) {
 			# warn "assertion: value of dependence '$dep_target' should be in cache but none there";
 			$self->target_remove($dep_target);
@@ -423,7 +425,7 @@ don't want to save a value in cache you can throw an exception from L<code> of
 type L<CHI::Cascade::Value>. Your instance of L<CHI::Cascade::Value> can have a
 value or cannot (a valid value can be even C<undef>!). A L<run> method returns
 either a value is set by you (through L<CHI::Cascade::Value::value> method) or
-value from cache or C<undef> in other cases. Please to see	
+value from cache or C<undef> in other cases. Please to see
 L<CHI::Cascade::Value>
 
 =over

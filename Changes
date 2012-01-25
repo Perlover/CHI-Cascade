@@ -1,3 +1,7 @@
+0.19
+    *) Fixed bug of die like "Can't call method "is_value" on an undefined value
+       at /usr/local/share/perl5/CHI/Cascade.pm line 190"
+
 0.18
     +) Now if recompute function dies with exception of CHI::Cascade::Value type
        (introduced in v.0.13) CHI::Cascade::run method will return old value of
