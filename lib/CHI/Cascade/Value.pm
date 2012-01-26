@@ -49,7 +49,7 @@ You can use it class for a returning of values by exceptions. For example:
     die CHI::Cascade::Value->new
 
 This throws an exception with nothing value. If you do it from your recompute
-code your L<CHI::Cascade::run> method will return an old value from cache or if
+code your L<CHI::Cascade/run> method will return an old value from cache or if
 it's not in cache it will return an C<undef> value.
 
 Or
@@ -58,13 +58,13 @@ Or
     die CHI::Cascade::Value->new->value( undef );
 
 This throws an exception with valid value. Please note that C<undef> is valid
-value too! But bacause the L<CHI::Cascade::run> method returns only a value (not
+value too! But bacause the L<CHI::Cascade/run> method returns only a value (not
 instance of L<CHI::Cascade::Value> object) there is not recommended to use
 C<undef> values (C<run> method returns C<undef> when it cannot get a value right
 now).
 
 Please use it class only in special cases - when you need to break recopmuting,
-want to return an specific value only for once execution of L<CHI::Cascade::run>
+want to return an specific value only for once execution of L<CHI::Cascade/run>
 method and don't want to save value in cache.
 
 =head1 CONSTRUCTOR
@@ -77,16 +77,21 @@ It will create instance $value with nothing value
 
 =over
 
-=item $value->value
+=item value
 
-=item $value->value( $new_value )
+Examples:
+
+    $value->value
+    $value->value( $new_value )
 
 You can use it to get/set a value of $value. An C<undef> value is valid too!
 First version returns a value, second sets a value and returns C<$value>.
 
-=item $value->is_value
+=item is_value
 
-returns C<true> if value was set by L<value> method or C<false> else.
+    $value->is_value
+
+returns C<true> if value was set by L</value> method or C<false> else.
 
 =back
 

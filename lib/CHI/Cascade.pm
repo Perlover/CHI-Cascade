@@ -394,7 +394,7 @@ It should be plain text of single dependence of this target.
 
 An each item of list can be scalar value (exactly matched target) or code
 reference. If item is coderef it will be executed as $coderef->( $rule,
-L<$rule-E<gt>qr_params|CHI::Cascade::Rule/qr_params> ) and should return a
+L<< $rule->qr_params|CHI::Cascade::Rule/qr_params >> ) and should return a
 scalar value as current dependence for this target at runtime (the API for
 coderef parameters was changed since v0.16)
 
@@ -402,7 +402,7 @@ coderef parameters was changed since v0.16)
 
 This subroutine will be executed every time inside I<run> method if necessary
 and with parameters as: $coderef->( $rule,
-L<$rule-E<gt>qr_params|CHI::Cascade::Rule/qr_params> ) (API was changed since
+L<< $rule->qr_params|CHI::Cascade::Rule/qr_params >> ) (API was changed since
 v0.16). It should return B<scalar> or B<arrayref>. The returned value is
 I<scalar> it will be considered as single dependence of this target and the
 behavior will be exactly as described for I<scalar> in this paragraph. If the
@@ -420,11 +420,11 @@ any dependence or dependences of dependences and so on will be recomputed. Will
 be executed as C<< $code->( $rule, $target, $hashref_to_value_of_dependencies )
 >> I<(The API of running this code was changed since v0.10)>
 
-If you want to terminate a code and to return immediately from L<run> method and
-don't want to save a value in cache you can throw an exception from L<code> of
+If you want to terminate a code and to return immediately from L</run> method and
+don't want to save a value in cache you can throw an exception from L</code> of
 type L<CHI::Cascade::Value>. Your instance of L<CHI::Cascade::Value> can have a
-value or cannot (a valid value can be even C<undef>!). A L<run> method returns
-either a value is set by you (through L<CHI::Cascade::Value::value> method) or
+value or cannot (a valid value can be even C<undef>!). A L</run> method returns
+either a value is set by you (through L<CHI::Cascade::Value/value> method) or
 value from cache or C<undef> in other cases. Please to see
 L<CHI::Cascade::Value>
 
@@ -438,7 +438,7 @@ parameters and so on). Please to see L<CHI::Cascade::Rule>
 
 =item $target
 
-A current target as plain text (what a target the $cascade got from L<run>
+A current target as plain text (what a target the $cascade got from L</run>
 method)
 
 =item $hashref_to_value_of_dependencies
@@ -457,7 +457,7 @@ last will not be executed (The C<run> will return C<undef>).
 =item params
 
 You can pass in your code any additional parameters by this option. These
-parameters are accessed in your code through L<params|CHI::Cascade::Rule/params>
+parameters are accessed in your code through L<CHI::Cascade::Rule/params>
 method of L<CHI::Cascade::Rule> instance object.
 
 =item busy_lock
@@ -508,7 +508,7 @@ recomputed this target will be recomputed too.
 =item touch( $target )
 
 This method refreshes the time of this target. Here is analogy with L<touch>
-utility of Unix and behaviour as L<make> after it. After L</touch> all targets
+utility of Unix and behaviour as L<make(1)> after it. After L</touch> all targets
 are dependent from this target will be recomputed at next L</run> with an
 appropriate ones.
 
