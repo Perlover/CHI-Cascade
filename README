@@ -113,6 +113,42 @@ METHODS
                 this target and the behavior will be exactly as described
                 for *arrayref* in this paragraph.
 
+        depends_catch
+            Optional. This is coderef for dependence exceptions. If any
+            dependence from list of "depends"'s option throws an exception
+            of type CHI::Cascade::Value by "die" (for example like this
+            code: "die CHI::Cascade::Value->new->value( { i_have_problem =>
+            1 } )" ) then the $cascade will execute this code as
+            "$rule->{depends_catch}->( $this_rule_obj,
+            $exception_of_dependence, $rule_obj_of_dependence,
+            $plain_text_target_of_dependence )" and you can do into inside a
+            following:
+
+            re-"die" new exception of any type
+                If your new exception will be type of CHI::Cascade::Value
+                you will get the value of this object from "run" method
+                immediately (please to see "code" below) without saving in
+                cache.
+
+                If exception will be other type this will be propogated
+                onward beyond the "run" method
+
+            to do something
+                You can make something in this code. After execution of your
+                code the cascade re-throws original exception of dependence
+                like described above in "re-"die"" section.
+
+                But please notice that original exception has a status of
+                "thrown from code" so it can be catched later by other
+                "depends_catch" callback from other rule located closer to
+                the call hierarchy of "run".
+
+            Please notice that there no way to continue a "code" of current
+            rule if any dependence throws an exception!. It because that the
+            main concept of execution code of rules is to have all valid
+            values (cached or recomputed) of all dependencies before
+            execution of dependent code.
+
         code
             Required. The code reference for computing a value of this
             target (a recompute code). Will be executed if no value in cache
@@ -122,13 +158,13 @@ METHODS
             of running this code was changed since v0.10)*
 
             If you want to terminate a code and to return immediately from
-            run method and don't want to save a value in cache you can throw
-            an exception from code of type CHI::Cascade::Value. Your
+            "run" method and don't want to save a value in cache you can
+            throw an exception from "code" of type CHI::Cascade::Value. Your
             instance of CHI::Cascade::Value can have a value or cannot (a
-            valid value can be even "undef"!). A run method returns either a
-            value is set by you (through CHI::Cascade::Value::value method)
-            or value from cache or "undef" in other cases. Please to see
-            CHI::Cascade::Value
+            valid value can be even "undef"!). A "run" method returns either
+            a value is set by you (through "value" in CHI::Cascade::Value
+            method) or value from cache or "undef" in other cases. Please to
+            see CHI::Cascade::Value
 
             $rule
                 An instance of CHI::Cascade::Rule object. You can use it
@@ -137,13 +173,13 @@ METHODS
                 Please to see CHI::Cascade::Rule
 
             $target
-                A current target as plain text (what a target the $cascade
-                got from run method)
+                The current executed target as plain text for this "code"
 
             $hashref_to_value_of_dependencies
-                A hash reference of values of all dependencies for current
-                target. Keys in this hash are flat strings of dependecies
-                and values are computed or cached ones.
+                A hash reference of values (values are cleaned values not
+                CHI::Cascade::Value objects!) of all dependencies for
+                current target. Keys in this hash are flat strings of
+                dependecies and values are computed or cached ones.
 
                 This module should guarantee that values of dependencies
                 will be valid values even if value is "undef". This code can
@@ -156,7 +192,8 @@ METHODS
         params
             You can pass in your code any additional parameters by this
             option. These parameters are accessed in your code through
-            params method of CHI::Cascade::Rule instance object.
+            "params" in CHI::Cascade::Rule method of CHI::Cascade::Rule
+            instance object.
 
         busy_lock
             Optional. Default is "busy_lock" of constructor or *never* if
@@ -191,15 +228,16 @@ METHODS
             in cache.
 
     run( $target )
-        This method makes a cascade computing if need and returns value for
-        this target If any dependence of this target of any dependencies of
+        This method makes a cascade computing if need and returns value
+        (value is cleaned value not CHI::Cascade::Value object!) for this
+        target If any dependence of this target of any dependencies of
         dependencies were recomputed this target will be recomputed too.
 
     touch( $target )
         This method refreshes the time of this target. Here is analogy with
-        touch utility of Unix and behaviour as make after it. After "touch"
-        all targets are dependent from this target will be recomputed at
-        next "run" with an appropriate ones.
+        touch utility of Unix and behaviour as make(1) after it. After
+        "touch" all targets are dependent from this target will be
+        recomputed at next "run" with an appropriate ones.
 
     target_remove ( $target )
         It's like a removing of target file in make. You can force to

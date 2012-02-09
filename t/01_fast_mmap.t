@@ -29,4 +29,4 @@ my $cascade = CHI::Cascade->new(
 
 test_cascade($cascade);
 
-$SIG{__DIE__}->();
+$SIG{__DIE__} eq 'IGNORE' || $SIG{__DIE__}->();

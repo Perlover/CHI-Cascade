@@ -14,9 +14,9 @@ sub new {
 
     # To do clone or new object
     my $self = bless {
-	map({ $_ => $from->{$_}}
+	map( { $_ => $from->{$_} }
 	  grep { exists $from->{$_} }
-	  qw( target depends code params busy_lock cascade recomputed )),
+	  qw( target depends depends_catch code params busy_lock cascade recomputed )),
 	qr_params	=> [],
 	matched_target	=> undef
     }, ref($class) || $class;
@@ -88,9 +88,10 @@ An instance of this object is created by L<CHI::Cascade> in L<CHI::Cascade/rule>
 =head1 DESCRIPTION
 
 The instance of this object is passed to L<CHI::Cascade/code>,
-L<CHI::Cascade/coderef>, L<CHI::Cascade/recomputed> by L<CHI::Cascade> as first
-argument I<(The API of running this code was changed since v0.16)> You can use
-it object as accessor to some parameters of your currect executed target.
+L<CHI::Cascade/coderef>, L<CHI::Cascade/recomputed>,
+L<CHI::Cascade/depends_catch> by L<CHI::Cascade> as first argument I<(The API of
+running this code was changed since v0.16)>. You can use it object as accessor
+to some parameters of your currect executed target.
 
 =head1 METHODS
 

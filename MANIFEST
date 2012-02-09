@@ -25,6 +25,8 @@ t/02_memcached.t
 t/03_file_cache.t
 t/04_memcached_multi.t
 t/05_fast_mmap.t
+t/06_fast_mmap.t
 t/lib/test_01.pm
 t/lib/test_02.pm
+t/lib/test_03.pm
 TODO

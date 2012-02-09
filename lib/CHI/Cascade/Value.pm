@@ -34,6 +34,16 @@ sub value {
     $self->{value};
 }
 
+sub thrown_from_code {
+    my $self = shift;
+
+    if (@_) {
+	$self->{thrown_from_code} = $_[0];
+	return $self;
+    }
+    $self->{thrown_from_code};
+}
+
 1;
 
 __END__

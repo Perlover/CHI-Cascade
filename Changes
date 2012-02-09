@@ -1,3 +1,8 @@
+0.20
+    +) Some optimization
+    *) Few fixes of documentation
+    +) Added option 'depends_catch' to rule as catcher callback for dependencies
+
 0.19
     *) Fixed bug of die like "Can't call method "is_value" on an undefined value
        at /usr/local/share/perl5/CHI/Cascade.pm line 190"
