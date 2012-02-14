@@ -1,5 +1,24 @@
 I would want to do (may be you want to do yourself and push request to github?:)
+But if upi want to help please let me know before (may be i do it right now)
 
-    - To add doc for throwing a object of CHI::Cascade::Value from compute code
+    - To add an ability to change cache for target markers (for example if cache
+      for recomputed values is mirrored to file system (unknown as 'mirrored
+      cache' in CHI)). It's needed because target markers are very small and
+      they can flood an inode table in file system
+    - Non blocking execution. I want to have options for 'run' method if cache
+      value is needed recomputed we should not recomputed it but we should
+      return either old value or 'undef'. For example if we have a site and it
+      visited by Google bot we will prefer generate for it quickly page from old
+      data and recalculate it later by background process for example or may be
+      don't recalculate. Google bot will not wait of recomputing or access time
+      of page will not good for us in Google statistics.
+    - for non blocking 'run' executions we will want to have ability to
+      recompute these tasks later in background process. I think better to have
+      a queue of targets and method like $cascade->queue() for background
+      processes. For example code of this process like:
+      while (1) { $cascade->queue; sleep 1 }
+      OR
+      while (1) { $cascade->run('queue_target'); sleep 1 }
+      The queue can be kept in cache too and may be it will be simple target
     - To need corrections of my English in docs (my English is not well as i
       want)
