@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.20;
+our $VERSION = 0.21;
 
 use Carp;
 
@@ -145,8 +145,6 @@ sub value_ref_if_recomputed {
 
     my @qr_params = $rule->qr_params;
 
-    $self->{chain}{$target} = 1;
-
     if ( $self->target_computing($target) ) {
 	# If we have any target as a being computed (dependencie/original)
 	# there is no need to compute anything - trying to return original target value
@@ -194,8 +192,10 @@ sub value_ref_if_recomputed {
 
 	    $dep_values{$dep_target}->[0] = $self->find($dep_target);
 
-	    die qq{Found a circled rule (target '$dep_target' as dependence of '$target')"}
-	      if ( ! $only_from_cache && exists $self->{chain}{$dep_target} );
+	    die qq{Found circle dependencies ( target '$target' <--> '$dep_target' ) - aborted!"}
+	      if ( exists $self->{ $only_from_cache ? 'only_cache_chain' : 'chain' }{$target}{$dep_target} );
+
+	    $self->{ $only_from_cache ? 'only_cache_chain' : 'chain' }{$target}{$dep_target} = 1;
 
 	    $catcher->( sub {
 		$self->target_lock($rule)
@@ -246,7 +246,8 @@ sub run {
     croak qq{The target ($target) for run should be string} if ref($target);
     croak qq{The target for run is empty} if $target eq '';
 
-    $self->{chain} = {};
+    $self->{chain}            = {};
+    $self->{only_cache_chain} = {};
 
     my $ret = eval {
 	$self->{orig_target} = $target;

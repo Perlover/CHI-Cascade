@@ -1,3 +1,6 @@
+0.21
+    *) A detection of circle dependencies is improved (not tested)
+
 0.20
     +) Some optimization
     *) Few fixes of documentation
