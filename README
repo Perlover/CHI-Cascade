@@ -74,6 +74,13 @@ CONSTRUCTOR
         recomputed again. This option helps to avoid it. You can set up a
         special busy_lock for rules too.
 
+    target_chi
+        Optional. This is CHI cache for target markers. Default value is
+        value of "chi" option. It can be useful if you use a "l1_cache" in
+        CHI option. So you can separate data of targets from target markers
+        - data will be kept in a file cache and a marker in memory cache for
+        example.
+
 METHODS
     rule( %options )
         To add new rule to "CHI::Cascade" object. All rules should be added
