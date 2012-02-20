@@ -1,3 +1,7 @@
+0.22
+    +) Added the option 'target_chi' - target markers can be kept in other CHI
+       cache than data of targets. It's useful for l1_cache's caches of CHI
+
 0.21
     *) A detection of circle dependencies is improved (not tested)
 

@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.21;
+our $VERSION = 0.22;
 
 use Carp;
 
@@ -22,6 +22,8 @@ sub new {
 	    stats		=> { recompute => 0 }
 
 	}, ref($class) || $class;
+
+    $self->{target_chi} ||= $self->{chi};
 
     $self;
 }
@@ -46,7 +48,7 @@ sub rule {
 sub target_computing {
     my $trg_obj;
 
-    ($trg_obj = $_[0]->{chi}->get("t:$_[1]"))
+    ($trg_obj = $_[0]->{target_chi}->get("t:$_[1]"))
       ? $trg_obj->locked
       : 0;
 }
@@ -56,7 +58,7 @@ sub target_time {
 
     my $trg_obj;
 
-    return ( ($trg_obj = $self->{chi}->get("t:$target"))
+    return ( ($trg_obj = $self->{target_chi}->get("t:$target"))
       ? $trg_obj->time
       : 0
     );
@@ -78,10 +80,10 @@ sub target_lock {
     return
       if ( $self->target_locked( $target = $rule->target ) );
 
-    $trg_obj = CHI::Cascade::Target->new unless ( ( $trg_obj = $self->{chi}->get("t:$target") ) );
+    $trg_obj = CHI::Cascade::Target->new unless ( ( $trg_obj = $self->{target_chi}->get("t:$target") ) );
 
     $trg_obj->lock;
-    $self->{chi}->set( "t:$target", $trg_obj, $rule->{busy_lock} || $self->{busy_lock} || 'never' );
+    $self->{target_chi}->set( "t:$target", $trg_obj, $rule->{busy_lock} || $self->{busy_lock} || 'never' );
 
     $self->{target_locks}{$target} = 1;
 }
@@ -91,10 +93,10 @@ sub target_unlock {
 
     my $target = $rule->target;
 
-    if ( my $trg_obj = $self->{chi}->get("t:$target") ) {
+    if ( my $trg_obj = $self->{target_chi}->get("t:$target") ) {
 	$trg_obj->unlock;
 	$trg_obj->touch if $value && $value->recomputed;
-	$self->{chi}->set( "t:$target", $trg_obj, 'never' );
+	$self->{target_chi}->set( "t:$target", $trg_obj, 'never' );
 
 	delete $self->{target_locks}{$target};
     }
@@ -103,15 +105,15 @@ sub target_unlock {
 sub target_remove {
     my ($self, $target) = @_;
 
-    $self->{chi}->remove("t:$target");
+    $self->{target_chi}->remove("t:$target");
 }
 
 sub touch {
     my ($self, $target) = @_;
 
-    if ( my $trg_obj = $self->{chi}->get("t:$target") ) {
+    if ( my $trg_obj = $self->{target_chi}->get("t:$target") ) {
 	$trg_obj->touch;
-	$self->{chi}->set( "t:$target", $trg_obj, 'never' );
+	$self->{target_chi}->set( "t:$target", $trg_obj, 'never' );
     }
 }
 
@@ -385,6 +387,13 @@ expire. When a target is recomputed it is locked. If process is to be
 recomputing target and it will die or OS will be hangs up we can dead locks and
 locked target will never recomputed again. This option helps to avoid it. You
 can set up a special busy_lock for rules too.
+
+=item target_chi
+
+Optional. This is CHI cache for target markers. Default value is value of
+L</chi> option. It can be useful if you use a L<CHI/l1_cache> option. So you can
+separate data of targets from target markers - data will be kept in a file cache
+and a marker in memory cache for example.
 
 =back
 
