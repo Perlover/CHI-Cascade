@@ -24,6 +24,7 @@ sub new {
 	}, ref($class) || $class;
 
     $self->{target_chi} ||= $self->{chi};
+    $self->{queue_chi}  ||= $self->{target_chi};
 
     $self;
 }
@@ -49,7 +50,7 @@ sub target_computing_or_queued {
     my $trg_obj;
 
     ($trg_obj = $_[0]->{target_chi}->get("t:$_[1]"))
-      ? ( $trg_obj->locked || ( $self->{queue} && $trg_obj->queued ) )
+      ? ( $trg_obj->locked || ( $_[0]->{queue} && $trg_obj->queued ) )
       : 0;
 }
 
@@ -122,16 +123,51 @@ sub target_locked {
 }
 
 sub target_queue {
+    my $self = shift;
+
+    my $trg_obj;
+
+    $trg_obj = CHI::Cascade::Target->new unless $trg_obj = $self->{target_chi}->get("t:$self->{orig_target}");
+    $trg_obj->be_queued;
+    $self->{target_chi}->set( "t:$self->{orig_target}", $trg_obj, $trg_obj->locked ? $self->{orig_rule}{busy_lock} || $self->{busy_lock} || 'never' : 'never' );
+
+    my $queue;
+
+    $queue = [] unless $queue = $self->{queue_chi}->get("q:$self->{queue}");
+    push @$queue, $self->{orig_target};
+    $self->{queue_chi}->set( "q:$self->{queue}", $queue, 'never' );
+}
+
+sub target_not_queued {
     my ( $self, $target ) = @_;
 
-    my ($trg_obj, $target);
+    my $trg_obj;
 
-    $trg_obj = CHI::Cascade::Target->new unless ( ( $trg_obj = $self->{target_chi}->get("t:$target") ) );
+    if ( $trg_obj = $self->{target_chi}->get("t:$target") ) {
+	$trg_obj->not_queued;
+        $self->{target_chi}->set( "t:$target", $trg_obj, 'never' );
+    }
+}
 
-    $trg_obj->be_queued;
-    $self->{target_chi}->set( "t:$target", $trg_obj, $rule->{busy_lock} || $self->{busy_lock} || 'never' );
+sub queue {
+    my ( $self, $queue_name ) = @_;
 
-    # TODO put to queue
+    my ( $queue, $run_target );
+
+    if ( $queue = $self->{queue_chi}->get("q:$queue_name") && @$queue ) {
+	eval { $self->run( $run_target = $queue->[0] ) };
+
+	my $error = $@;
+
+	$self->target_not_queued( $queue->[0] );
+	$self->{queue_chi}->set( "q:$queue_name", $queue, 'never' )
+	  if ( ( $queue = $self->{queue_chi}->get("q:$queue_name") ) && $queue->[0] eq $run_target && shift @$queue );
+
+	die $error if $error;
+	return 1;
+    }
+
+    return 0;
 }
 
 sub recompute {
@@ -139,7 +175,7 @@ sub recompute {
 
     if ( $self->{queue} ) {
 	# If run methos was run with 'queue' option - to prevent here any recomputing
-	$self->target_queue( $self->{orig_target} );
+	$self->target_queue;
 	die CHI::Cascade::Value->new;
     }
 
@@ -273,7 +309,7 @@ sub run {
     my $ret = eval {
 	$self->{orig_target} = $target;
 
-	return $self->value_ref_if_recomputed( $self->find($target), $target );
+	return $self->value_ref_if_recomputed( $self->{orig_rule} = $self->find($target), $target );
     };
 
     if ($@) {
