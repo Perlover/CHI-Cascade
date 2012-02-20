@@ -45,11 +45,11 @@ sub rule {
     }
 }
 
-sub target_computing {
+sub target_computing_or_queued {
     my $trg_obj;
 
     ($trg_obj = $_[0]->{target_chi}->get("t:$_[1]"))
-      ? $trg_obj->locked
+      ? ( $trg_obj->locked || ( $self->{queue} && $trg_obj->queued ) )
       : 0;
 }
 
@@ -121,8 +121,27 @@ sub target_locked {
     exists $_[0]->{target_locks}{$_[1]};
 }
 
+sub target_queue {
+    my ( $self, $target ) = @_;
+
+    my ($trg_obj, $target);
+
+    $trg_obj = CHI::Cascade::Target->new unless ( ( $trg_obj = $self->{target_chi}->get("t:$target") ) );
+
+    $trg_obj->be_queued;
+    $self->{target_chi}->set( "t:$target", $trg_obj, $rule->{busy_lock} || $self->{busy_lock} || 'never' );
+
+    # TODO put to queue
+}
+
 sub recompute {
     my ( $self, $rule, $target, $dep_values) = @_;
+
+    if ( $self->{queue} ) {
+	# If run methos was run with 'queue' option - to prevent here any recomputing
+	$self->target_queue( $self->{orig_target} );
+	die CHI::Cascade::Value->new;
+    }
 
     my $ret = eval { $rule->{code}->( $rule, $target, $rule->{dep_values} = $dep_values ) };
 
@@ -147,10 +166,10 @@ sub value_ref_if_recomputed {
 
     my @qr_params = $rule->qr_params;
 
-    if ( $self->target_computing($target) ) {
-	# If we have any target as a being computed (dependencie/original)
+    if ( $self->target_computing_or_queued($target) ) {
+	# If we have any target as a being computed (dependencie/original) or queued if need
 	# there is no need to compute anything - trying to return original target value
-	die $self->get_value($self->{orig_target});
+	die $self->get_value( $self->{orig_target} );
     }
 
     my ( %dep_values, $dep_name );
@@ -218,7 +237,6 @@ sub value_ref_if_recomputed {
 		{
 		    $catcher->( sub {
 			if ( ! ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target, 1 ) )->is_value ) {
-			    # warn "assertion: value of dependence '$dep_target' should be in cache but none there";
 			    $self->target_remove($dep_target);
 			    return 1;
 			}
@@ -243,13 +261,14 @@ sub value_ref_if_recomputed {
 }
 
 sub run {
-    my ($self, $target) = @_;
+    my ( $self, $target, %opts ) = @_;
 
     croak qq{The target ($target) for run should be string} if ref($target);
     croak qq{The target for run is empty} if $target eq '';
 
     $self->{chain}            = {};
     $self->{only_cache_chain} = {};
+    $self->{queue}            = $opts{queue} // $self->{queue};
 
     my $ret = eval {
 	$self->{orig_target} = $target;
@@ -266,7 +285,6 @@ sub run {
 	$ret = $self->get_value( $target );
 	if ( ! $ret->is_value ) {
 	    $self->target_remove($target);
-	    # warn "assertion: value for target '$target' should be in cache but none there";
 	}
     }
 
