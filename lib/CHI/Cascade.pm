@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.22;
+our $VERSION = 0.221;
 
 use Carp;
 
@@ -50,7 +50,7 @@ sub target_computing_or_queued {
     my $trg_obj;
 
     ($trg_obj = $_[0]->{target_chi}->get("t:$_[1]"))
-      ? ( $trg_obj->locked || ( $_[0]->{queue} && $trg_obj->queued ) )
+      ? ( $trg_obj->locked || ( $_[0]->{queue_name} && $trg_obj->queued ) )
       : 0;
 }
 
@@ -133,9 +133,9 @@ sub target_queue {
 
     my $queue;
 
-    $queue = [] unless $queue = $self->{queue_chi}->get("q:$self->{queue}");
+    $queue = [] unless $queue = $self->{queue_chi}->get("q:$self->{queue_name}");
     push @$queue, $self->{orig_target};
-    $self->{queue_chi}->set( "q:$self->{queue}", $queue, 'never' );
+    $self->{queue_chi}->set( "q:$self->{queue_name}", $queue, 'never' );
 }
 
 sub target_not_queued {
@@ -154,7 +154,7 @@ sub queue {
 
     my ( $queue, $run_target );
 
-    if ( $queue = $self->{queue_chi}->get("q:$queue_name") && @$queue ) {
+    if ( ( $queue = $self->{queue_chi}->get("q:$queue_name") ) && @$queue ) {
 	eval { $self->run( $run_target = $queue->[0] ) };
 
 	my $error = $@;
@@ -173,7 +173,7 @@ sub queue {
 sub recompute {
     my ( $self, $rule, $target, $dep_values) = @_;
 
-    if ( $self->{queue} ) {
+    if ( $self->{queue_name} ) {
 	# If run methos was run with 'queue' option - to prevent here any recomputing
 	$self->target_queue;
 	die CHI::Cascade::Value->new;
@@ -304,7 +304,7 @@ sub run {
 
     $self->{chain}            = {};
     $self->{only_cache_chain} = {};
-    $self->{queue}            = $opts{queue} // $self->{queue};
+    $self->{queue_name}       = $opts{queue} // $self->{queue};
 
     my $ret = eval {
 	$self->{orig_target} = $target;
