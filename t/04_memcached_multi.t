@@ -134,8 +134,6 @@ sub start_parent_commanding {
 
     print CHILD_SLOW_WTR "exit\n"		or die $!;
     print CHILD_QUICK_WTR "exit\n"		or die $!;
-
-    $SIG{__DIE__}->();
 }
 
 sub run_slow_process {
