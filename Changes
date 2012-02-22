@@ -1,6 +1,9 @@
-new_ver (now is 0.221)
+new_ver
     +) Queues for non blocking running - to see test t/lib/test_04.pm
     +) Added test '07_fast_mmap.t' for queue-ing
+
+0.221
+    *) Fix some bugs
 
 0.22
     +) Added the option 'target_chi' - target markers can be kept in other CHI

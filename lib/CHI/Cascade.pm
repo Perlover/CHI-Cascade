@@ -210,7 +210,7 @@ sub value_ref_if_recomputed {
     if ( my $ret = $self->target_computing_or_queued($target) ) {
 	# If we have any target as a being computed (dependencie/original) or queued if need
 	# there is no need to compute anything - trying to return original target value
-	die $self->get_value( $self->{orig_target} )->bits( $ret == 1 ? CASCADE_COMPUTING : CASCADE_QUEUED );
+	die CHI::Cascade::Value->new->bits( $ret == 1 ? CASCADE_COMPUTING : CASCADE_QUEUED );
     }
 
     my ( %dep_values, $dep_name );
@@ -302,7 +302,13 @@ sub value_ref_if_recomputed {
 }
 
 sub run {
-    my ( $self, $target, %opts ) = @_;
+    my $self = shift;
+
+    return $self->_run( 0, @_ )->value;
+}
+
+sub _run {
+    my ( $self, $only_from_cache, $target, %opts ) = @_;
 
     croak qq{The target ($target) for run should be string} if ref($target);
     croak qq{The target for run is empty} if $target eq '';
@@ -314,27 +320,25 @@ sub run {
     my $ret = eval {
 	$self->{orig_target} = $target;
 
-	return $self->value_ref_if_recomputed( $self->{orig_rule} = $self->find($target), $target );
+	return $self->value_ref_if_recomputed( $self->{orig_rule} = $self->find($target), $target, $only_from_cache );
     };
 
-    if ($@) {
+    my $terminated;
+
+    if ($terminated = $@) {
 	$ret = $@;
 	die $ret unless eval { $ret->isa('CHI::Cascade::Value') };
     }
 
     if ( ! $ret->is_value ) {
-	my $from_cache = $self->get_value( $target );
+	return $self->get_value( $target )->bits( $ret->bits )
+	  if ( $terminated );
 
-	$from_cache->bits( CASCADE_ACTUAL_VALUE )
-	  if ( $ret->bits & CASCADE_ACTUAL_VALUE && $from_cache->is_value );
-
-	$self->target_remove($target)
-	  if ! $from_cache->is_value;
-
-	return $from_cache->value;
+	return $self->_run( 1, $target, %opts )->bits( $ret->bits )
+	  if ! $only_from_cache;
     }
 
-    return $ret->value;
+    return $ret;
 }
 
 sub find {
