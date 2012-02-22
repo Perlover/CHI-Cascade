@@ -11,8 +11,6 @@ use CHI::Cascade::Value;
 use CHI::Cascade::Rule;
 use CHI::Cascade::Target;
 
-our $whyUndef;
-
 sub new {
     my ($class, %opts) = @_;
 
@@ -150,7 +148,6 @@ sub value_ref_if_recomputed {
     if ( $self->target_computing($target) ) {
 	# If we have any target as a being computed (dependencie/original)
 	# there is no need to compute anything - trying to return original target value
-	push @{$whyUndef->{checkpoint}}, [ 3, $target ];
 	die CHI::Cascade::Value->new;
     }
 
@@ -161,12 +158,10 @@ sub value_ref_if_recomputed {
 	# Trying to get value from cache
 	my $value = $self->get_value($target);
 
-	push @{$whyUndef->{checkpoint}}, [ 4, $target ];
 	return $value if $value->is_value;
 
 	# If no in cache - we should recompute it again
 	$self->target_lock($rule);
-	push @{$whyUndef->{checkpoint}}, [ 5, $target ];
     }
 
     my $ret = eval {
@@ -212,11 +207,9 @@ sub value_ref_if_recomputed {
 
 	$self->target_lock($rule) if ! $self->target_time($target);
 
-	push @{$whyUndef->{checkpoint}}, [ 6, $target ];
 	if ( $self->target_locked($target) ) {
 	    # We should recompute this target
 	    # So we should recompute values for other dependencies
-	    push @{$whyUndef->{checkpoint}}, [ 7, $target ];
 	    foreach $dep_target (keys %dep_values) {
 		if (   ! defined $dep_values{$dep_target}->[1]
 		    || ! $dep_values{$dep_target}->[1]->is_value )
@@ -224,7 +217,6 @@ sub value_ref_if_recomputed {
 		    $catcher->( sub {
 			if ( ! ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target, 1 ) )->is_value ) {
 			    # warn "assertion: value of dependence '$dep_target' should be in cache but none there";
-			    push @{$whyUndef->{checkpoint}}, [ 8, $target, $dep_target ];
 			    $self->target_remove($dep_target);
 			    return 1;
 			}
@@ -234,11 +226,9 @@ sub value_ref_if_recomputed {
 	    }
 	}
 
-	push @{$whyUndef->{checkpoint}}, [ 9, $target ];
 	return $self->recompute( $rule, $target, { map { $_ => $dep_values{$_}->[1]->value } keys %dep_values } )
 	  if $self->target_locked($target);
 
-	push @{$whyUndef->{checkpoint}}, [ 10, $target ];
 	return undef;
     };
 
@@ -247,7 +237,6 @@ sub value_ref_if_recomputed {
       if $self->target_locked($target);
     die $e if $e;
 
-    push @{$whyUndef->{checkpoint}}, [ 11, $target ];
     return $ret || CHI::Cascade::Value->new;
 }
 
@@ -259,7 +248,6 @@ sub run {
 
     $self->{chain}            = {};
     $self->{only_cache_chain} = {};
-    $whyUndef = {};
 
     my $ret = eval {
 	$self->{orig_target} = $target;
@@ -275,10 +263,8 @@ sub run {
     }
 
     if ( ! $ret->is_value ) {
-	push @{$whyUndef->{checkpoint}}, [ 1, $target ];
 	$ret = $terminated ? $self->get_value( $target ) : $self->value_ref_if_recomputed( $self->{orig_rule}, $target, 1 );
 	if ( ! $ret->is_value ) {
-	    push @{$whyUndef->{checkpoint}}, [ 2, $target ];
 
 	    # $self->target_remove($target);
 	    # warn "assertion: value for target '$target' should be in cache but none there";
