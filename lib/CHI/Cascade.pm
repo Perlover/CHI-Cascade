@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.22;
+our $VERSION = 0.221;
 
 use Carp;
 
@@ -150,7 +150,7 @@ sub value_ref_if_recomputed {
     if ( $self->target_computing($target) ) {
 	# If we have any target as a being computed (dependencie/original)
 	# there is no need to compute anything - trying to return original target value
-	die $self->get_value($self->{orig_target});
+	die CHI::Cascade::Value->new;
     }
 
     my ( %dep_values, $dep_name );
@@ -254,18 +254,21 @@ sub run {
     my $ret = eval {
 	$self->{orig_target} = $target;
 
-	return $self->value_ref_if_recomputed( $self->find($target), $target );
+	return $self->value_ref_if_recomputed( $self->{orig_rule} = $self->find($target), $target );
     };
 
-    if ($@) {
+    my $terminated;
+
+    if ($terminated = $@) {
 	$ret = $@;
 	die $ret unless eval { $ret->isa('CHI::Cascade::Value') };
     }
 
     if ( ! $ret->is_value ) {
-	$ret = $self->get_value( $target );
+	$ret = $terminated ? $self->get_value( $target ) : $self->value_ref_if_recomputed( $self->{orig_rule}, $target, 1 );
 	if ( ! $ret->is_value ) {
-	    $self->target_remove($target);
+
+	    # $self->target_remove($target);
 	    # warn "assertion: value for target '$target' should be in cache but none there";
 	}
     }

@@ -238,10 +238,12 @@ sub setup_quick_parent {
 }
 
 sub setup_slow_child {
+    $SIG{TERM} = $SIG{INT} = $SIG{HUP} = sub { exit 1 };
     close CHILD_SLOW_RDR; close CHILD_SLOW_WTR;
 }
 
 sub setup_quick_child {
+    $SIG{TERM} = $SIG{INT} = $SIG{HUP} = sub { exit 1 };
     close CHILD_QUICK_RDR; close CHILD_QUICK_WTR;
 }
 
