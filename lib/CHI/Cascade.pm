@@ -252,7 +252,7 @@ sub run {
     my $ret = eval {
 	$self->{orig_target} = $target;
 
-	my $ret = $self->value_ref_if_recomputed( $self->{orig_rule} = $self->find($target), $target );
+	return $self->value_ref_if_recomputed( $self->{orig_rule} = $self->find($target), $target );
     };
 
     my $terminated;
