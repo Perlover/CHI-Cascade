@@ -37,7 +37,8 @@
          "requires" : {
             "CHI" : 0,
             "Scalar::Util" : 0,
-            "Time::HiRes" : 0
+            "Time::HiRes" : 0,
+            "parent" : 0
          }
       }
    },
@@ -50,5 +51,5 @@
          "url" : "git://github.com/Perlover/CHI-Cascade.git"
       }
    },
-   "version" : "0.24"
+   "version" : "0.2401"
 }
