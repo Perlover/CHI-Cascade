@@ -30,7 +30,7 @@ else {
     $user_opt		= '';
 }
 
-my $out = `memcached $user_opt -d -s $socket_file -a 644 -m 64 -c 10 -P $pid_file -t 2 2>&1`;
+my $out = `memcached $user_opt -d -s $socket_file -a 644 -m 64 -P $pid_file -t 2 2>&1`;
 
 $SIG{__DIE__} = sub {
     `{ kill \`cat $pid_file\`; } >/dev/null 2>&1`;
