@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.23;
+our $VERSION = 0.23_01;
 
 use Carp;
 
@@ -302,9 +302,14 @@ sub value_ref_if_recomputed {
 }
 
 sub run {
-    my $self = shift;
+    my ( $self, $target, %opts ) = @_;
 
-    return $self->_run( 0, @_ )->value;
+    my $res = $self->_run( 0, $target, %opts );
+
+    ${ $opts{bits} } = $res->bits
+      if ( $opts{bits} );
+
+    $res->value;
 }
 
 sub _run {
