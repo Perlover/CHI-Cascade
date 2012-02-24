@@ -1,3 +1,6 @@
+0.24 (stable)
+    *) Fixed bug with tests with memcached
+
 0.23
     +) Queues for non blocking running - to see test t/lib/test_04.pm
        (no docs yet)
