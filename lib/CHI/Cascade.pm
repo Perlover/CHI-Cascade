@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.24_01;
+our $VERSION = 0.24_02;
 
 use Carp;
 
@@ -179,7 +179,7 @@ sub recompute {
     if ( $self->{queue_name} ) {
 	# If run methos was run with 'queue' option - to prevent here any recomputing
 	$self->target_queue;
-	die CHI::Cascade::Value->new;
+	die CHI::Cascade::Value->new( bits => CASCADE_QUEUED );
     }
 
     my $ret = eval { $rule->{code}->( $rule, $target, $rule->{dep_values} = $dep_values ) };
@@ -332,14 +332,21 @@ sub _run {
 
     if ($terminated = $@) {
 	$ret = $@;
-	die $ret unless eval { $ret->isa('CHI::Cascade::Value') };
+
+	die $ret
+	  unless eval { $ret->isa('CHI::Cascade::Value') };
+
+	$ret->bits( CASCADE_CODE_EXCEPTION )
+	  unless $ret->bits;
     }
 
     if ( ! $ret->is_value ) {
-	return $self->get_value( $target )->bits( $ret->bits )
-	  if ( $terminated );
+        my $from_cache = $self->get_value( $target );
 
-	return $self->_run( 1, $target, %opts )->bits( $ret->bits )
+	return $from_cache->bits( $ret->bits )
+	  if ( $terminated || $from_cache->is_value );
+
+	return $self->_run( 1, $target, %opts )
 	  if ! $only_from_cache;
     }
 

@@ -21,8 +21,8 @@ use constant CASCADE_ACTUAL_VALUE	=> 1 << 4;
 # value = actual_value & recomuted now	-> this value is recomputed right now
 use constant CASCADE_RECOMPUTED		=> 1 << 5;
 
-# value = undef | old_value		-> a computing temporarily unavailable
-use constant CASCADE_COMPUTING_T_U	=> 1 << 6;
+# value = undef | old_value | value passed by exception -> code of target or code of any dependencies has raised an exception
+use constant CASCADE_CODE_EXCEPTION	=> 1 << 6;
 
 use parent 'Exporter';
 

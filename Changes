@@ -1,3 +1,6 @@
+0.24_02 - ...
+    +) Some improvements
+
 0.24_01
     +) Added 'parent' module in requires for old perl installation (<=5.10.0)
 
