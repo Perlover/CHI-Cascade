@@ -320,7 +320,7 @@ sub _run {
 
     $self->{chain}            = {};
     $self->{only_cache_chain} = {};
-    $self->{queue_name}       = $opts{queue} // $self->{queue};
+    $self->{queue_name}       = defined( $opts{queue} ) ?  $opts{queue} : $self->{queue};
 
     my $ret = eval {
 	$self->{orig_target} = $target;

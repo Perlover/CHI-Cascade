@@ -1,5 +1,8 @@
 0.24_02 - ...
     +) Some improvements
+    *) For backward compatibility with perl < 5.9 the operator '$a // $b' is
+       changed to long style as 'defined($a) ? $a : $b'. It should improve a
+       tests on old perl installations
 
 0.24_01
     +) Added 'parent' module in requires for old perl installation (<=5.10.0)
