@@ -1,4 +1,7 @@
 use strict;
-use Test::More tests => 1;
+use Test::More tests => 2;
 
-BEGIN { use_ok 'CHI::Cascade' }
+BEGIN {
+    use_ok 'CHI::Cascade';
+    use_ok 'CHI::Cascade::Value', ':state';
+}
