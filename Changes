@@ -1,4 +1,4 @@
-0.24_02 - ...
+0.25
     +) Some improvements
     *) For backward compatibility with perl < 5.9 the operator '$a // $b' is
        changed to long style as 'defined($a) ? $a : $b'. It should improve a
