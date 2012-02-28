@@ -1,3 +1,9 @@
+DEVELOP branch
+    *) The 'bits' method of CHI::Cascade::Value is now renamed to 'state' (no
+       docs yet)
+    +) Added method CHI::Cascade::Value::state_as_str (no docs yet)
+    *) The test '07_fast_mmap.t' tests now queue & states of values
+
 0.25
     +) Some improvements
     *) For backward compatibility with perl < 5.9 the operator '$a // $b' is

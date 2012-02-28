@@ -3,26 +3,38 @@ package CHI::Cascade::Value;
 use strict;
 use warnings;
 
-# value = undef				-> no in cache
-use constant CASCADE_NO_CACHE		=> 1 << 0;
+my %states = (
+    # value = undef			-> no in cache
+    CASCADE_NO_CACHE			=> 1 << 0,
 
-# value = undef | old_value		-> other process is computing this target or its any dependencies
-use constant CASCADE_COMPUTING		=> 1 << 1;
+    # value = undef | old_value		-> other process is computing this target or its any dependencies
+    CASCADE_COMPUTING			=> 1 << 1,
 
-# value = undef | old_value		-> this target is queued or any its dependencies are queued (only if 'run' is executed with 'queue' option)
-use constant CASCADE_QUEUED		=> 1 << 2;
+    # value = undef | old_value		-> this target is queued or any its dependencies are queued (only if 'run' is executed with 'queue' option)
+    CASCADE_QUEUED			=> 1 << 2,
 
-# value = old_value | actual_value	-> the value from cache (not computed now)
-use constant CASCADE_FROM_CACHE		=> 1 << 3;
+    # value = old_value | actual_value	-> the value from cache (not computed now)
+    CASCADE_FROM_CACHE			=> 1 << 3,
 
-# value = actual_value			-> this value is actual
-use constant CASCADE_ACTUAL_VALUE	=> 1 << 4;
+    # value = actual_value		-> this value is actual
+    CASCADE_ACTUAL_VALUE		=> 1 << 4,
 
-# value = actual_value & recomuted now	-> this value is recomputed right now
-use constant CASCADE_RECOMPUTED		=> 1 << 5;
+    # value = actual_value & recomuted now	-> this value is recomputed right now
+    CASCADE_RECOMPUTED			=> 1 << 5,
 
-# value = undef | old_value | value passed by exception -> code of target or code of any dependencies has raised an exception
-use constant CASCADE_CODE_EXCEPTION	=> 1 << 6;
+    # value = undef | old_value | value passed by exception -> code of target or code of any dependencies has raised an exception
+    CASCADE_CODE_EXCEPTION		=> 1 << 6
+);
+
+for ( keys %states ) {
+    no strict 'refs';
+    no warnings 'redefine';
+
+    my $bit = $states{$_};
+
+    *{ $_ } = sub () { $bit }
+}
+
 
 use parent 'Exporter';
 
@@ -30,7 +42,7 @@ use parent 'Exporter';
     no strict 'refs';
 
     our %EXPORT_TAGS = (
-	bits		=> [ map { "$_" } grep { /^CASCADE_/ && *{$_}{CODE} } keys %{ __PACKAGE__ . "::" } ]
+	state		=> [ map { "$_" } grep { /^CASCADE_/ && *{$_}{CODE} } keys %{ __PACKAGE__ . "::" } ]
     );
     Exporter::export_ok_tags( keys %EXPORT_TAGS );
 }
@@ -40,7 +52,7 @@ sub new {
 
     my $self = bless { %opts }, ref($class) || $class;
 
-    $self->{bits} ||= 0;
+    $self->{state} ||= 0;
 
     $self;
 }
@@ -49,14 +61,29 @@ sub is_value {
     shift->{is_value};
 }
 
-sub bits {
+sub state {
     my $self = shift;
 
     if (@_) {
-	$self->{bits} |= $_[0];
+	$self->{state} |= $_[0];
 	return $self;
     }
-    $self->{bits};
+    $self->{state};
+}
+
+sub state_as_str {
+    my $state = $_[1];
+
+    return '' if ! $state;
+
+    my @names;
+
+    for ( keys %states ) {
+	push @names, $_
+	  if ( $state & $states{$_} );
+    }
+
+    join( " | ", sort @names );
 }
 
 sub recomputed {

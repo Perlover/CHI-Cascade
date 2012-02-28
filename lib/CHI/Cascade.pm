@@ -3,11 +3,11 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.25;
+our $VERSION = 0.25_01;
 
 use Carp;
 
-use CHI::Cascade::Value ':bits';
+use CHI::Cascade::Value ':state';
 use CHI::Cascade::Rule;
 use CHI::Cascade::Target;
 
@@ -70,9 +70,9 @@ sub get_value {
 
     my $value = $self->{chi}->get("v:$target");
 
-    return $value->bits( CASCADE_FROM_CACHE ) if ($value);
+    return $value->state( CASCADE_FROM_CACHE ) if ($value);
 
-    CHI::Cascade::Value->new( bits => CASCADE_NO_CACHE );
+    CHI::Cascade::Value->new( state => CASCADE_NO_CACHE );
 }
 
 sub target_lock {
@@ -179,7 +179,7 @@ sub recompute {
     if ( $self->{queue_name} ) {
 	# If run methos was run with 'queue' option - to prevent here any recomputing
 	$self->target_queue;
-	die CHI::Cascade::Value->new( bits => CASCADE_QUEUED );
+	die CHI::Cascade::Value->new( state => CASCADE_QUEUED );
     }
 
     my $ret = eval { $rule->{code}->( $rule, $target, $rule->{dep_values} = $dep_values ) };
@@ -194,7 +194,7 @@ sub recompute {
     my $value;
 
     $self->{chi}->set( "v:$target", $value = CHI::Cascade::Value->new->value($ret), 'never' );
-    $value->recomputed(1)->bits( CASCADE_ACTUAL_VALUE | CASCADE_RECOMPUTED );
+    $value->recomputed(1)->state( CASCADE_ACTUAL_VALUE | CASCADE_RECOMPUTED );
     $rule->{recomputed}->( $rule, $target, $value ) if ( ref $rule->{recomputed} eq 'CODE' );
 
     return $value;
@@ -210,7 +210,7 @@ sub value_ref_if_recomputed {
     if ( my $ret = $self->target_computing_or_queued($target) ) {
 	# If we have any target as a being computed (dependencie/original) or queued if need
 	# there is no need to compute anything - trying to return original target value
-	die CHI::Cascade::Value->new->bits( $ret == 1 ? CASCADE_COMPUTING : CASCADE_QUEUED );
+	die CHI::Cascade::Value->new->state( $ret == 1 ? CASCADE_COMPUTING : CASCADE_QUEUED );
     }
 
     my ( %dep_values, $dep_name );
@@ -290,7 +290,7 @@ sub value_ref_if_recomputed {
 	return $self->recompute( $rule, $target, { map { $_ => $dep_values{$_}->[1]->value } keys %dep_values } )
 	  if $self->target_locked($target);
 
-	return CHI::Cascade::Value->new( bits => CASCADE_ACTUAL_VALUE );
+	return CHI::Cascade::Value->new( state => CASCADE_ACTUAL_VALUE );
     };
 
     my $e = $@;
@@ -306,8 +306,8 @@ sub run {
 
     my $res = $self->_run( 0, $target, %opts );
 
-    ${ $opts{bits} } = $res->bits
-      if ( $opts{bits} );
+    ${ $opts{state} } = $res->state
+      if ( $opts{state} );
 
     $res->value;
 }
@@ -336,14 +336,14 @@ sub _run {
 	die $ret
 	  unless eval { $ret->isa('CHI::Cascade::Value') };
 
-	$ret->bits( CASCADE_CODE_EXCEPTION )
-	  unless $ret->bits;
+	$ret->state( CASCADE_CODE_EXCEPTION )
+	  unless $ret->state;
     }
 
     if ( ! $ret->is_value ) {
         my $from_cache = $self->get_value( $target );
 
-	return $from_cache->bits( $ret->bits )
+	return $from_cache->state( $ret->state )
 	  if ( $terminated || $from_cache->is_value );
 
 	return $self->_run( 1, $target, %opts )
