@@ -1,3 +1,8 @@
+0.2504
+    *) The test 04_memcached_multi.t some fails in FreeBSD. May be this is
+       because 'sleep' works not as expected. I changed the 'sleep' to
+       'select($,$,$,$)'. May be it will improve this test at FreeBSD...
+
 0.2503
     +) Added CHI::Cascade::Rule::value_expires method for changing by recompute
        code the expiration time of values & target markers (no docs yet)

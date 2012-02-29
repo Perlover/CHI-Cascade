@@ -6,7 +6,7 @@ use CHI::Cascade;
 
 use IO::Handle;
 use Storable	qw(store_fd fd_retrieve);
-use Time::HiRes	qw(sleep alarm time);
+use Time::HiRes	qw(time);
 
 use constant DELAY	=> 2.0;
 
@@ -41,7 +41,7 @@ $SIG{__DIE__} = sub {
 
 $SIG{TERM} = $SIG{INT} = $SIG{HUP} = sub { die "Terminated by " . shift };
 
-sleep 1;
+select( undef, undef, undef, 1.0 );
 
 if ( $? || ! (-f $pid_file )) {
     ( defined($out) && chomp($out) ) || ( $out = '' );
@@ -96,7 +96,7 @@ sub start_parent_commanding {
 
     print CHILD_SLOW_WTR "save1\n"		or die $!;
 
-    sleep 0.1;
+    select( undef, undef, undef, 0.1 );
 
     print CHILD_QUICK_WTR "read1\n"		or die $!;
     $in = fd_retrieve(\*CHILD_QUICK_RDR)	or die "fd_retrieve";
@@ -112,7 +112,7 @@ sub start_parent_commanding {
 
     print CHILD_SLOW_WTR "save2\n"		or die $!;
 
-    sleep 0.1;
+    select( undef, undef, undef, 0.1 );
 
     print CHILD_QUICK_WTR "read1\n"		or die $!;
     $in = fd_retrieve(\*CHILD_QUICK_RDR)	or die "fd_retrieve";
@@ -261,10 +261,9 @@ sub set_cascade_rules {
 	target		=> 'big_array',
 	depends		=> 'big_array_trigger',
 	code		=> sub {
-	    if ($delay) {
-		alarm(0);
-		sleep $delay;
-	    }
+	    select( undef, undef, undef, $delay )
+	      if ($delay);
+
 	    return $big_array_type ? [ 101 .. 1000 ] : [ 1 .. 1000 ];
 	}
     );
@@ -277,10 +276,9 @@ sub set_cascade_rules {
 
 	    my ($page) = $target =~ /^one_page_(\d+)$/;
 
-	    if ($delay) {
-		alarm(0);
-		sleep $delay;
-	    }
+	    select( undef, undef, undef, $delay )
+	      if ($delay);
+
 	    my $ret = [ @{$values->{big_array}}[ ($page * 10) .. (( $page + 1 ) * 10 - 1) ] ];
 	    $ret;
 	}
