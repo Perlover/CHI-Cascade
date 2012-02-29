@@ -13,6 +13,8 @@ my $recomputed;
 sub test_cascade {
     my $cascade = shift;
 
+    plan tests => 22;
+
     $cascade->rule(
 	target		=> 'big_array',
 	code		=> sub {
@@ -71,6 +73,7 @@ sub test_cascade {
     ok ( $cascade->queue('test') == 0 );
 
     $cascade->target_remove( 'one_page_1' );
+
     ok( defined( $res = $cascade->run( 'one_page_1', queue => 'test', state => \$state ) ) );
     is_deeply( $res, [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ] );
     ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_FROM_CACHE | CASCADE_QUEUED" );

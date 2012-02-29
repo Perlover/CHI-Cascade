@@ -18,6 +18,8 @@ $SIG{__DIE__} = sub {
     $SIG{__DIE__} = 'IGNORE';
 };
 
+$SIG{TERM} = $SIG{INT} = $SIG{HUP} = sub { die "Terminated by signal " . shift };
+
 `{ rm -rf t/fast_mmap; } >/dev/null 2>&1`;
 
 my $cascade = CHI::Cascade->new(

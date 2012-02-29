@@ -49,6 +49,17 @@ sub depends {
     return $self->{depends};
 }
 
+sub value_expires {
+    my $self = shift;
+
+    if (@_) {
+	$self->{value_expires} = $_[0];
+	return $self;
+    }
+    $self->{value_expires} || 'never';
+}
+
+
 sub target	{ shift->{matched_target}	}
 sub params	{ shift->{params}		}
 sub cascade	{ shift->{cascade}		}

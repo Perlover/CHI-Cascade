@@ -11,12 +11,12 @@ use CHI::Cascade;
 plan skip_all => "Not installed CHI::Driver::FastMmap ($@)"
   unless eval "use CHI::Driver::FastMmap; 1";
 
-plan tests => 22;
-
 $SIG{__DIE__} = sub {
     `{ rm -rf t/fast_mmap; } >/dev/null 2>&1`;
     $SIG{__DIE__} = 'IGNORE';
 };
+
+$SIG{TERM} = $SIG{INT} = $SIG{HUP} = sub { die "Terminated by signal " . shift };
 
 `{ rm -rf t/fast_mmap; } >/dev/null 2>&1`;
 

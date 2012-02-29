@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2502;
+our $VERSION = 0.2503;
 
 use Carp;
 
@@ -76,9 +76,9 @@ sub get_value {
 }
 
 sub target_lock {
-    my ($self, $rule) = @_;
+    my ( $self, $rule ) = @_;
 
-    my ($trg_obj, $target);
+    my ( $trg_obj, $target );
 
     # If target is already locked - a return
     return
@@ -93,14 +93,14 @@ sub target_lock {
 }
 
 sub target_unlock {
-    my ($self, $rule, $value) = @_;
+    my ( $self, $rule, $value ) = @_;
 
     my $target = $rule->target;
 
-    if ( my $trg_obj = $self->{target_chi}->get("t:$target") ) {
+    if ( my $trg_obj = $self->{target_chi}->get( "t:$target" ) ) {
 	$trg_obj->unlock;
 	$trg_obj->touch if $value && $value->recomputed;
-	$self->{target_chi}->set( "t:$target", $trg_obj, 'never' );
+	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->value_expires );
 
 	delete $self->{target_locks}{$target};
     }
@@ -177,7 +177,7 @@ sub recompute {
     my ( $self, $rule, $target, $dep_values) = @_;
 
     if ( $self->{queue_name} ) {
-	# If run methos was run with 'queue' option - to prevent here any recomputing
+	# If 'run' method was run with 'queue' option - to prevent here any recomputing
 	$self->target_queue;
 	die CHI::Cascade::Value->new( state => CASCADE_QUEUED );
     }
@@ -193,7 +193,7 @@ sub recompute {
 
     my $value;
 
-    $self->{chi}->set( "v:$target", $value = CHI::Cascade::Value->new->value($ret), 'never' );
+    $self->{chi}->set( "v:$target", $value = CHI::Cascade::Value->new->value($ret), $rule->value_expires );
     $value->recomputed(1)->state( CASCADE_ACTUAL_VALUE | CASCADE_RECOMPUTED );
     $rule->{recomputed}->( $rule, $target, $value ) if ( ref $rule->{recomputed} eq 'CODE' );
 
@@ -294,7 +294,7 @@ sub value_ref_if_recomputed {
     };
 
     my $e = $@;
-    $self->target_unlock($rule, $ret)
+    $self->target_unlock( $rule, $ret )
       if $self->target_locked($target);
     die $e if $e;
 

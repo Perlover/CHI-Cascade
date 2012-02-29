@@ -10,7 +10,7 @@ my %states = (
     # value = undef | old_value		-> other process is computing this target or its any dependencies
     CASCADE_COMPUTING			=> 1 << 1,
 
-    # value = undef | old_value		-> this target is queued or any its dependencies are queued (only if 'run' is executed with 'queue' option)
+    # value = undef | old_value		-> this target is queued or any its dependencies are queued (only if 'run' is executed with 'queue' option!)
     CASCADE_QUEUED			=> 1 << 2,
 
     # value = old_value | actual_value	-> the value from cache (not computed now)

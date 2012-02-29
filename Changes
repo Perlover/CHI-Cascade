@@ -1,4 +1,11 @@
-DEVELOP branch
+0.2503
+    +) Added CHI::Cascade::Rule::value_expires method for changing by recompute
+       code the expiration time of values & target markers (no docs yet)
+    +) Added test for value_expires - test_05.pm by 08_fast_mmap.t
+    *) Fixed bugs - in tests *_fast_mmap.t if was ^C signal - files of FastMmap
+       driver were not deleted
+
+0.2502
     *) The 'bits' method of CHI::Cascade::Value is now renamed to 'state' (no
        docs yet)
     +) Added method CHI::Cascade::Value::state_as_str (no docs yet)
