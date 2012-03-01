@@ -158,13 +158,14 @@ sub queue {
     my ( $queue, $run_target );
 
     if ( ( $queue = $self->{queue_chi}->get("q:$queue_name") ) && @$queue ) {
-	eval { $self->run( $run_target = $queue->[0] ) };
+	$run_target = shift @$queue;
+	$self->{queue_chi}->set( "q:$queue_name", $queue, 'never' );
+
+	eval { $self->run($run_target) };
 
 	my $error = $@;
 
-	$self->target_not_queued( $queue->[0] );
-	$self->{queue_chi}->set( "q:$queue_name", $queue, 'never' )
-	  if ( ( $queue = $self->{queue_chi}->get("q:$queue_name") ) && $queue->[0] eq $run_target && shift @$queue );
+	$self->target_not_queued($run_target);
 
 	die $error if $error;
 	return 1;
