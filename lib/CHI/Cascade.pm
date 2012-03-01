@@ -133,12 +133,16 @@ sub target_queue {
     $trg_obj = CHI::Cascade::Target->new unless $trg_obj = $self->{target_chi}->get("t:$self->{orig_target}");
     $trg_obj->be_queued;
     $self->{target_chi}->set( "t:$self->{orig_target}", $trg_obj, $trg_obj->locked ? $self->{orig_rule}{busy_lock} || $self->{busy_lock} || 'never' : 'never' );
+}
+
+sub target_name_in_queue {
+    my ( $self, $queue_name, $target_name ) = @_;
 
     my $queue;
 
-    $queue = [] unless $queue = $self->{queue_chi}->get("q:$self->{queue_name}");
-    push @$queue, $self->{orig_target};
-    $self->{queue_chi}->set( "q:$self->{queue_name}", $queue, 'never' );
+    $queue = [] unless $queue = $self->{queue_chi}->get("q:$queue_name");
+    push @$queue, $target_name;
+    $self->{queue_chi}->set( "q:$queue_name", $queue, 'never' );
 }
 
 sub target_not_queued {
@@ -161,11 +165,18 @@ sub queue {
 	$run_target = shift @$queue;
 	$self->{queue_chi}->set( "q:$queue_name", $queue, 'never' );
 
-	eval { $self->run($run_target) };
+	my $state;
+
+	eval { $self->run( $run_target, state => \$state ) };
 
 	my $error = $@;
 
-	$self->target_not_queued($run_target);
+	if ( $state & CASCADE_ACTUAL_VALUE ) {
+	    $self->target_not_queued($run_target);
+	}
+	else {
+	    $self->target_name_in_queue( $queue_name, $run_target );
+	}
 
 	die $error if $error;
 	return 1;
@@ -180,6 +191,7 @@ sub recompute {
     if ( $self->{queue_name} ) {
 	# If 'run' method was run with 'queue' option - to prevent here any recomputing
 	$self->target_queue;
+	$self->target_name_in_queue( $self->{queue_name}, $self->{orig_target} );
 	die CHI::Cascade::Value->new( state => CASCADE_QUEUED );
     }
 
