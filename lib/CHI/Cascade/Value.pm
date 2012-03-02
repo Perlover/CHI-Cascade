@@ -10,8 +10,8 @@ my %states = (
     # value = undef | old_value		-> other process is computing this target or its any dependencies
     CASCADE_COMPUTING			=> 1 << 1,
 
-    # value = undef | old_value		-> this target is queued or any its dependencies are queued (only if 'run' is executed with 'queue' option!)
-    CASCADE_QUEUED			=> 1 << 2,
+    # value = undef | old_value		-> there was forking for recomputing
+    CASCADE_FORKED			=> 1 << 2,
 
     # value = old_value | actual_value	-> the value from cache (not computed now)
     CASCADE_FROM_CACHE			=> 1 << 3,
@@ -23,10 +23,7 @@ my %states = (
     CASCADE_RECOMPUTED			=> 1 << 5,
 
     # value = undef | old_value | value passed by exception -> code of target or code of any dependencies has raised an exception
-    CASCADE_CODE_EXCEPTION		=> 1 << 6,
-
-    # value = undef | old_value		-> there was forking for recomputing
-    CASCADE_FORKED			=> 1 << 7
+    CASCADE_CODE_EXCEPTION		=> 1 << 6
 );
 
 for ( keys %states ) {

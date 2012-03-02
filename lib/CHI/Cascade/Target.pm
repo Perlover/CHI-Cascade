@@ -30,20 +30,6 @@ sub time {
 
 sub touch {
     $_[0]->{time} = Time::HiRes::time;
-    $_[0]->not_queued;
-}
-
-sub be_queued {
-    $_[0]->{queued} = 1;
-}
-
-sub queued {
-    exists $_[0]->{queued}
-      and $_[0]->{queued};
-}
-
-sub not_queued {
-    delete $_[0]->{queued};
 }
 
 1;

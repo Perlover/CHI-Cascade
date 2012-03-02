@@ -1,3 +1,7 @@
+0.2506
+    *) The code cleaned from any queueing. I think the best concept for non
+       blocking 'run' will be forking.
+
 0.2505
     +) Other conception without queueing - forking. Now we can have non blocked
        'run' method (targets are not recomputed immediately). Instead the target

@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2505;
+our $VERSION = 0.2506;
 
 use Carp;
 
@@ -25,7 +25,6 @@ sub new {
 	}, ref($class) || $class;
 
     $self->{target_chi} ||= $self->{chi};
-    $self->{queue_chi}  ||= $self->{target_chi};
 
     $self;
 }
@@ -47,11 +46,11 @@ sub rule {
     }
 }
 
-sub target_computing_or_queued {
+sub target_computing {
     my $trg_obj;
 
     ($trg_obj = $_[0]->{target_chi}->get("t:$_[1]"))
-      ? ( $trg_obj->locked ? 1 : ( $_[0]->{queue_name} && $trg_obj->queued && 2 ) )
+      ? ( $trg_obj->locked ? 1 : 0 )
       : 0;
 }
 
@@ -126,81 +125,8 @@ sub target_locked {
     exists $_[0]->{target_locks}{$_[1]};
 }
 
-sub target_queue {
-    my $self = shift;
-
-    my $trg_obj;
-
-    $trg_obj = CHI::Cascade::Target->new unless $trg_obj = $self->{target_chi}->get("t:$self->{orig_target}");
-    $trg_obj->be_queued;
-    $self->{target_chi}->set( "t:$self->{orig_target}", $trg_obj, $trg_obj->locked ? $self->{orig_rule}{busy_lock} || $self->{busy_lock} || 'never' : 'never' );
-}
-
-sub target_name_in_queue {
-    my ( $self, $queue_name, $target_name ) = @_;
-
-    my $queue;
-
-    $queue = [] unless $queue = $self->{queue_chi}->get("q:$queue_name");
-    push @$queue, $target_name;
-    $self->{queue_chi}->set( "q:$queue_name", $queue, 'never' );
-}
-
-sub target_not_queued {
-    my ( $self, $target ) = @_;
-
-    my $trg_obj;
-
-    if ( $trg_obj = $self->{target_chi}->get("t:$target") ) {
-	$trg_obj->not_queued;
-        $self->{target_chi}->set( "t:$target", $trg_obj, 'never' );
-    }
-}
-
-sub get_queue {
-    my ( $self, $queue_name ) = @_;
-
-    return $_[0]->{queue_chi}->get("q:$_[1]") || [];
-}
-
-sub queue {
-    my ( $self, $queue_name ) = @_;
-
-    my ( $queue, $run_target );
-
-    if ( ( $queue = $self->{queue_chi}->get("q:$queue_name") ) && @$queue ) {
-	$run_target = shift @$queue;
-	$self->{queue_chi}->set( "q:$queue_name", $queue, 'never' );
-
-	my $state;
-
-	eval { $self->run( $run_target, state => \$state ) };
-
-	my $error = $@;
-
-	if ( $state & CASCADE_ACTUAL_VALUE ) {
-	    $self->target_not_queued($run_target);
-	}
-	else {
-	    $self->target_name_in_queue( $queue_name, $run_target );
-	}
-
-	die $error if $error;
-	return 1;
-    }
-
-    return 0;
-}
-
 sub recompute {
     my ( $self, $rule, $target, $dep_values) = @_;
-
-    if ( $self->{queue_name} ) {
-	# If 'run' method was run with 'queue' option - to prevent here any recomputing
-	$self->target_queue;
-	$self->target_name_in_queue( $self->{queue_name}, $self->{orig_target} );
-	die CHI::Cascade::Value->new( state => CASCADE_QUEUED );
-    }
 
   FORK_BLOCK:
     {
@@ -249,10 +175,10 @@ sub value_ref_if_recomputed {
 
     my @qr_params = $rule->qr_params;
 
-    if ( my $ret = $self->target_computing_or_queued($target) ) {
-	# If we have any target as a being computed (dependencie/original) or queued if need
+    if ( $self->target_computing($target) ) {
+	# If we have any target as a being computed (dependencie/original)
 	# there is no need to compute anything - trying to return original target value
-	die CHI::Cascade::Value->new->state( $ret == 1 ? CASCADE_COMPUTING : CASCADE_QUEUED );
+	die CHI::Cascade::Value->new->state( CASCADE_COMPUTING );
     }
 
     my ( %dep_values, $dep_name );
@@ -366,7 +292,6 @@ sub _run {
 
     $self->{chain}            = {};
     $self->{only_cache_chain} = {};
-    $self->{queue_name}       = defined( $self->{run_opts}{queue} ) ?  $self->{run_opts}{queue} : $self->{queue};
 
     my $ret = eval {
 	$self->{orig_target} = $target;

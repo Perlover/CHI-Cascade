@@ -28,11 +28,9 @@ t/05_fast_mmap.t
 t/06_fast_mmap.t
 t/07_fast_mmap.t
 t/08_fast_mmap.t
-t/09_fast_mmap.t
 t/lib/test_01.pm
 t/lib/test_02.pm
 t/lib/test_03.pm
 t/lib/test_04.pm
 t/lib/test_05.pm
-t/lib/test_06.pm
 TODO

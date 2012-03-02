@@ -13,7 +13,7 @@ my $recomputed;
 sub test_cascade {
     my $cascade = shift;
 
-    plan tests => 22;
+    plan tests => 8;
 
     $cascade->rule(
 	target		=> 'big_array',
@@ -38,46 +38,26 @@ sub test_cascade {
 	recomputed	=> sub { $recomputed++ }
     );
 
-    ok( $cascade->{stats}{recompute} == 0 );
-
     my $state;
 
     my $time1 = time;
-    ok( ! defined $cascade->run( 'one_page_0', queue => 'test', state => \$state ) );
+    ok( ! defined $cascade->run( 'one_page_0', fork_if => sub { 1 }, state => \$state ) );
     my $time2 = time;
 
     ok( $cascade->{stats}{recompute} == 0 );
     ok( $time2 - $time1 < 0.1 );
-    ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_NO_CACHE | CASCADE_QUEUED" );
+    ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_FORKED | CASCADE_NO_CACHE" );
 
     my $res;
 
-    $time1 = time;
-    ok ( $cascade->queue('test') == 1 );
-    $time2 = time;
-    ok( $time2 - $time1 > 0.9 && $time2 - $time1 < 1.1 );
+    sleep 2; # After 2 seconds target should be recomputed already
 
-    ok( defined( $res = $cascade->run( 'one_page_0', queue => 'test', state => \$state ) ) );
+    $time1 = time;
+    ok( defined( $res = $cascade->run( 'one_page_0', fork_if => sub { 1 }, state => \$state ) ) );
+    $time2 = time;
+    ok( $time2 - $time1 < 0.1 );
     is_deeply( $res, [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ] );
     ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_ACTUAL_VALUE | CASCADE_FROM_CACHE" );
-
-    ok ( $cascade->queue('test') == 0 );
-
-    ok( defined( $res = $cascade->run( 'one_page_1', state => \$state ) ) );
-    is_deeply( $res, [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ] );
-    ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_ACTUAL_VALUE | CASCADE_RECOMPUTED" );
-
-    ok( defined( $res = $cascade->run( 'one_page_1', queue => 'test', state => \$state ) ) );
-    is_deeply( $res, [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ] );
-    ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_ACTUAL_VALUE | CASCADE_FROM_CACHE" );
-    ok ( $cascade->queue('test') == 0 );
-
-    $cascade->target_remove( 'one_page_1' );
-
-    ok( defined( $res = $cascade->run( 'one_page_1', queue => 'test', state => \$state ) ) );
-    is_deeply( $res, [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ] );
-    ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_FROM_CACHE | CASCADE_QUEUED" );
-    ok ( $cascade->queue('test') == 1 );
 }
 
 1;
