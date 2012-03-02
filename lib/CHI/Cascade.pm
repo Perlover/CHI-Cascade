@@ -156,6 +156,12 @@ sub target_not_queued {
     }
 }
 
+sub get_queue {
+    my ( $self, $queue_name ) = @_;
+
+    return $_[0]->{queue_chi}->get("q:$_[1]") || [];
+}
+
 sub queue {
     my ( $self, $queue_name ) = @_;
 
