@@ -1,3 +1,9 @@
+0.2505
+    +) Other conception without queueing - forking. Now we can have non blocked
+       'run' method (targets are not recomputed immediately). Instead the target
+       of 'run' is recomputed in other process (in child by fork) but the 'run'
+       of parent returns value from cache immediately.
+
 0.2504
     *) The test 04_memcached_multi.t some fails in FreeBSD. May be this is
        because 'sleep' works not as expected. I changed the 'sleep' to

@@ -23,7 +23,10 @@ my %states = (
     CASCADE_RECOMPUTED			=> 1 << 5,
 
     # value = undef | old_value | value passed by exception -> code of target or code of any dependencies has raised an exception
-    CASCADE_CODE_EXCEPTION		=> 1 << 6
+    CASCADE_CODE_EXCEPTION		=> 1 << 6,
+
+    # value = undef | old_value		-> there was forking for recomputing
+    CASCADE_FORKED			=> 1 << 7
 );
 
 for ( keys %states ) {

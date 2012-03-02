@@ -3,13 +3,14 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2504;
+our $VERSION = 0.2505;
 
 use Carp;
 
 use CHI::Cascade::Value ':state';
 use CHI::Cascade::Rule;
 use CHI::Cascade::Target;
+use POSIX ();
 
 sub new {
     my ($class, %opts) = @_;
@@ -201,6 +202,28 @@ sub recompute {
 	die CHI::Cascade::Value->new( state => CASCADE_QUEUED );
     }
 
+  FORK_BLOCK:
+    {
+	if ( $self->{run_opts}{fork_if} && $self->{run_opts}{fork_if}->($rule) ) {
+	    $SIG{CHLD} = 'IGNORE';
+
+	    my $pid = fork();
+
+	    last FORK_BLOCK unless defined $pid; # if we cannot fork we do it as usual (FIXME - may be it should be changed?)
+
+	    if ( $pid ) {
+		# Here we should finish and return from 'run' method the old value of 'run' target
+		# But we should not unlock target markers because our child continues execution as parent should do
+		$self->{target_locks} = {};	# The fraud against target locking
+		die CHI::Cascade::Value->new( state => CASCADE_FORKED );
+	    }
+	    else {
+		# child - continuing
+		$self->{exit_after_run} = 1;
+	    }
+	}
+    }
+
     my $ret = eval { $rule->{code}->( $rule, $target, $rule->{dep_values} = $dep_values ) };
 
     $self->{stats}{recompute}++;
@@ -323,23 +346,27 @@ sub value_ref_if_recomputed {
 sub run {
     my ( $self, $target, %opts ) = @_;
 
-    my $res = $self->_run( 0, $target, %opts );
+    $self->{run_opts} = \%opts;
+
+    my $res = $self->_run( 0, $target );
 
     ${ $opts{state} } = $res->state
       if ( $opts{state} );
+
+    POSIX::_exit(0) if $self->{exit_after_run};	# If it's child process after forking
 
     $res->value;
 }
 
 sub _run {
-    my ( $self, $only_from_cache, $target, %opts ) = @_;
+    my ( $self, $only_from_cache, $target ) = @_;
 
     croak qq{The target ($target) for run should be string} if ref($target);
     croak qq{The target for run is empty} if $target eq '';
 
     $self->{chain}            = {};
     $self->{only_cache_chain} = {};
-    $self->{queue_name}       = defined( $opts{queue} ) ?  $opts{queue} : $self->{queue};
+    $self->{queue_name}       = defined( $self->{run_opts}{queue} ) ?  $self->{run_opts}{queue} : $self->{queue};
 
     my $ret = eval {
 	$self->{orig_target} = $target;
@@ -365,7 +392,7 @@ sub _run {
 	return $from_cache->state( $ret->state )
 	  if ( $terminated || $from_cache->is_value );
 
-	return $self->_run( 1, $target, %opts )
+	return $self->_run( 1, $target )
 	  if ! $only_from_cache;
     }
 
