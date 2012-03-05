@@ -1,3 +1,6 @@
+0.2507
+    *) The code of 'forking' was deleted. New conception - 'defer' callback
+
 0.2506
     *) The code cleaned from any queueing. I think the best concept for non
        blocking 'run' will be forking.

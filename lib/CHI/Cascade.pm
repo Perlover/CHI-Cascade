@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2506;
+our $VERSION = 0.2507;
 
 use Carp;
 
@@ -125,29 +125,15 @@ sub target_locked {
     exists $_[0]->{target_locks}{$_[1]};
 }
 
+sub defer { 0 }
+
 sub recompute {
     my ( $self, $rule, $target, $dep_values) = @_;
 
-  FORK_BLOCK:
+    if (   ( $self->{run_opts}{defer} && ( $self->{run_opts}{defer}->( $rule, $self->{orig_target} ), 1 ) )
+        || $self->defer( $rule, $self->{orig_target} ) )
     {
-	if ( $self->{run_opts}{fork_if} && $self->{run_opts}{fork_if}->($rule) ) {
-	    $SIG{CHLD} = 'IGNORE';
-
-	    my $pid = fork();
-
-	    last FORK_BLOCK unless defined $pid; # if we cannot fork we do it as usual (FIXME - may be it should be changed?)
-
-	    if ( $pid ) {
-		# Here we should finish and return from 'run' method the old value of 'run' target
-		# But we should not unlock target markers because our child continues execution as parent should do
-		$self->{target_locks} = {};	# The fraud against target locking
-		die CHI::Cascade::Value->new( state => CASCADE_FORKED );
-	    }
-	    else {
-		# child - continuing
-		$self->{exit_after_run} = 1;
-	    }
-	}
+	die CHI::Cascade::Value->new( state => CASCADE_DEFERRED );
     }
 
     my $ret = eval { $rule->{code}->( $rule, $target, $rule->{dep_values} = $dep_values ) };
@@ -278,8 +264,6 @@ sub run {
 
     ${ $opts{state} } = $res->state
       if ( $opts{state} );
-
-    POSIX::_exit(0) if $self->{exit_after_run};	# If it's child process after forking
 
     $res->value;
 }

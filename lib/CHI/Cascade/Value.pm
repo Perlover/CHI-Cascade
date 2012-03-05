@@ -10,8 +10,8 @@ my %states = (
     # value = undef | old_value		-> other process is computing this target or its any dependencies
     CASCADE_COMPUTING			=> 1 << 1,
 
-    # value = undef | old_value		-> there was forking for recomputing
-    CASCADE_FORKED			=> 1 << 2,
+    # value = undef | old_value		-> recomputing is deferred
+    CASCADE_DEFERRED			=> 1 << 2,
 
     # value = old_value | actual_value	-> the value from cache (not computed now)
     CASCADE_FROM_CACHE			=> 1 << 3,

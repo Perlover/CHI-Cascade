@@ -13,7 +13,7 @@ my $recomputed;
 sub test_cascade {
     my $cascade = shift;
 
-    plan tests => 8;
+    plan tests => 15;
 
     $cascade->rule(
 	target		=> 'big_array',
@@ -38,22 +38,40 @@ sub test_cascade {
 	recomputed	=> sub { $recomputed++ }
     );
 
-    my $state;
+    my ( $state, @queue );
+
+    my $defer_cb = sub {
+	isa_ok( $_[0], 'CHI::Cascade::Rule' );
+	ok( $_[1] eq 'one_page_0' );
+	push @queue, $_[1];
+    };
 
     my $time1 = time;
-    ok( ! defined $cascade->run( 'one_page_0', fork_if => sub { 1 }, state => \$state ) );
+    ok( ! defined $cascade->run( 'one_page_0',
+	defer => $defer_cb,
+	state => \$state )
+    );
     my $time2 = time;
 
     ok( $cascade->{stats}{recompute} == 0 );
     ok( $time2 - $time1 < 0.1 );
-    ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_FORKED | CASCADE_NO_CACHE" );
+    ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_DEFERRED | CASCADE_NO_CACHE" );
+    ok( @queue == 1 && $queue[0] eq 'one_page_0' );
 
     my $res;
 
-    sleep 2; # After 2 seconds target should be recomputed already
+    $time1 = time;
+    ok( defined( $res = $cascade->run( 'one_page_0', state => \$state ) ) );
+    $time2 = time;
+    ok( $time2 - $time1 > 0.8 && $time2 - $time1 < 1.2 );
+    is_deeply( $res, [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ] );
+    ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_ACTUAL_VALUE | CASCADE_RECOMPUTED" );
 
     $time1 = time;
-    ok( defined( $res = $cascade->run( 'one_page_0', fork_if => sub { 1 }, state => \$state ) ) );
+    ok( defined $cascade->run( 'one_page_0',
+	defer => $defer_cb,
+	state => \$state )
+    );
     $time2 = time;
     ok( $time2 - $time1 < 0.1 );
     is_deeply( $res, [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ] );
