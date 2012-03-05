@@ -13,7 +13,7 @@ my $recomputed;
 sub test_cascade {
     my $cascade = shift;
 
-    plan tests => 15;
+    plan tests => 12;
 
     $cascade->rule(
 	target		=> 'big_array',
@@ -38,17 +38,11 @@ sub test_cascade {
 	recomputed	=> sub { $recomputed++ }
     );
 
-    my ( $state, @queue );
-
-    my $defer_cb = sub {
-	isa_ok( $_[0], 'CHI::Cascade::Rule' );
-	ok( $_[1] eq 'one_page_0' );
-	push @queue, $_[1];
-    };
+    my ( $state );
 
     my $time1 = time;
     ok( ! defined $cascade->run( 'one_page_0',
-	defer => $defer_cb,
+	defer => 1,
 	state => \$state )
     );
     my $time2 = time;
@@ -56,7 +50,6 @@ sub test_cascade {
     ok( $cascade->{stats}{recompute} == 0 );
     ok( $time2 - $time1 < 0.1 );
     ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_DEFERRED | CASCADE_NO_CACHE" );
-    ok( @queue == 1 && $queue[0] eq 'one_page_0' );
 
     my $res;
 
@@ -69,7 +62,7 @@ sub test_cascade {
 
     $time1 = time;
     ok( defined $cascade->run( 'one_page_0',
-	defer => $defer_cb,
+	defer => 1,
 	state => \$state )
     );
     $time2 = time;

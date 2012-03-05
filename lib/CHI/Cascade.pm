@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2507;
+our $VERSION = 0.2508;
 
 use Carp;
 
@@ -28,7 +28,6 @@ sub new {
 
     $self;
 }
-
 
 sub rule {
     my ($self, %opts) = @_;
@@ -125,16 +124,11 @@ sub target_locked {
     exists $_[0]->{target_locks}{$_[1]};
 }
 
-sub defer { 0 }
-
 sub recompute {
     my ( $self, $rule, $target, $dep_values) = @_;
 
-    if (   ( $self->{run_opts}{defer} && ( $self->{run_opts}{defer}->( $rule, $self->{orig_target} ), 1 ) )
-        || $self->defer( $rule, $self->{orig_target} ) )
-    {
-	die CHI::Cascade::Value->new( state => CASCADE_DEFERRED );
-    }
+    die CHI::Cascade::Value->new( state => CASCADE_DEFERRED )
+      if $self->{run_opts}{defer};
 
     my $ret = eval { $rule->{code}->( $rule, $target, $rule->{dep_values} = $dep_values ) };
 
