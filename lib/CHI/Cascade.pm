@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2508;
+our $VERSION = 0.2509;
 
 use Carp;
 
@@ -100,9 +100,9 @@ sub target_unlock {
 	$trg_obj->unlock;
 	$trg_obj->touch if $value && $value->recomputed;
 	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->value_expires );
-
-	delete $self->{target_locks}{$target};
     }
+
+    delete $self->{target_locks}{$target};
 }
 
 sub target_remove {

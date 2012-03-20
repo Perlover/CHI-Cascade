@@ -176,7 +176,20 @@ First version returns a value, second sets a value and returns C<$value>.
 
 returns C<true> if value was set by L</value> method or C<false> else.
 
+=item state
+
+    use CHI::Cascade::Value ':state';
+    $state_bits = $value->state;
+    $value = $value->state( CASCADE_* );
+
+A getting or setting of state bits of value object.
+
 =back
+
+=head1 STATE BITS
+
+Since version 0.26 the CHI::Cascade introduces the concept of state bits. An
+every value object (even which has not valid value) has a history described by state bits. To use this bit mask we can know how this value was gotten.
 
 =head1 AUTHOR
 

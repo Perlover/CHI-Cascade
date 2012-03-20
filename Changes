@@ -1,33 +1,17 @@
-0.2507
-    *) The code of 'forking' was deleted. New conception - 'defer' callback
-
-0.2506
-    *) The code cleaned from any queueing. I think the best concept for non
-       blocking 'run' will be forking.
-
-0.2505
-    +) Other conception without queueing - forking. Now we can have non blocked
-       'run' method (targets are not recomputed immediately). Instead the target
-       of 'run' is recomputed in other process (in child by fork) but the 'run'
-       of parent returns value from cache immediately.
-
-0.2504
+NEXT (0.26)
+    *) New conception of non-blocking run method - deferring
     *) The test 04_memcached_multi.t some fails in FreeBSD. May be this is
        because 'sleep' works not as expected. I changed the 'sleep' to
        'select($,$,$,$)'. May be it will improve this test at FreeBSD...
-
-0.2503
     +) Added CHI::Cascade::Rule::value_expires method for changing by recompute
        code the expiration time of values & target markers (no docs yet)
     +) Added test for value_expires - test_05.pm by 08_fast_mmap.t
     *) Fixed bugs - in tests *_fast_mmap.t if was ^C signal - files of FastMmap
        driver were not deleted
-
-0.2502
-    *) The 'bits' method of CHI::Cascade::Value is now renamed to 'state' (no
-       docs yet)
+    *) The new method CHI::Cascade::Value->state (no docs yet)
     +) Added method CHI::Cascade::Value::state_as_str (no docs yet)
-    *) The test '07_fast_mmap.t' tests now queue & states of values
+    *) The test '07_fast_mmap.t' tests now deferring & states of values
+    *) Fix few bug with target locking
 
 0.25
     +) Some improvements
