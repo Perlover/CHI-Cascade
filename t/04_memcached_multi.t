@@ -8,7 +8,8 @@ use IO::Handle;
 use Storable	qw(store_fd fd_retrieve);
 use Time::HiRes	qw(time);
 
-use constant DELAY	=> 2.0;
+use constant DELAY		=> 2.0;
+use constant QUICK_DELAY	=> 0.5;
 
 plan skip_all => 'Not installed CHI::Driver::Memcached::Fast'
   unless eval "use CHI::Driver::Memcached::Fast; 1";
@@ -96,7 +97,7 @@ sub start_parent_commanding {
 
     print CHILD_SLOW_WTR "save1\n"		or die $!;
 
-    select( undef, undef, undef, 0.1 );
+    select( undef, undef, undef, QUICK_DELAY );
 
     print CHILD_QUICK_WTR "read1\n"		or die $!;
     $in = fd_retrieve(\*CHILD_QUICK_RDR)	or die "fd_retrieve";
@@ -112,7 +113,7 @@ sub start_parent_commanding {
 
     print CHILD_SLOW_WTR "save2\n"		or die $!;
 
-    select( undef, undef, undef, 0.1 );
+    select( undef, undef, undef, QUICK_DELAY );
 
     print CHILD_QUICK_WTR "read1\n"		or die $!;
     $in = fd_retrieve(\*CHILD_QUICK_RDR)	or die "fd_retrieve";
