@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2509;
+our $VERSION = 0.2510;
 
 use Carp;
 
@@ -141,7 +141,9 @@ sub recompute {
 
     my $value;
 
-    $self->{chi}->set( "v:$target", $value = CHI::Cascade::Value->new->value($ret), $rule->value_expires );
+    # For performance a value should not expire in anyway (only target marker if need)
+    $self->{chi}->set( "v:$target", $value = CHI::Cascade::Value->new->value($ret), 'never' );
+
     $value->recomputed(1)->state( CASCADE_ACTUAL_VALUE | CASCADE_RECOMPUTED );
     $rule->{recomputed}->( $rule, $target, $value ) if ( ref $rule->{recomputed} eq 'CODE' );
 

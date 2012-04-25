@@ -1,4 +1,4 @@
-NEXT (0.26)
+NEXT (may be 0.26)
     *) New conception of non-blocking run method - deferring
     *) The test 04_memcached_multi.t some fails in FreeBSD. May be this is
        because 'sleep' works not as expected. I changed the 'sleep' to
@@ -12,6 +12,7 @@ NEXT (0.26)
     +) Added method CHI::Cascade::Value::state_as_str (no docs yet)
     *) The test '07_fast_mmap.t' tests now deferring & states of values
     *) Fix few bug with target locking
+    *) Fixed unproductive code piece of value with expiring
 
 0.25001
     *) Few fix - should improve tests
