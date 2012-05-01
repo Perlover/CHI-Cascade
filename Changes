@@ -13,6 +13,7 @@ NEXT (may be 0.26)
     *) The test '07_fast_mmap.t' tests now deferring & states of values
     *) Fix few bug with target locking
     *) Fixed unproductive code piece of value with expiring
+    *) Fixed unproductive code with target locking
 
 0.25001
     *) Few fix - should improve tests

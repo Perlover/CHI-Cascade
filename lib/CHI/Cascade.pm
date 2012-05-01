@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2510;
+our $VERSION = 0.2511;
 
 use Carp;
 
@@ -199,6 +199,8 @@ sub value_ref_if_recomputed {
 	    return $ret;
 	};
 
+	$self->target_lock($rule) if ! $self->target_time($target);
+
 	foreach my $depend (@{ $rule->depends }) {
 	    $dep_target = ref($depend) eq 'CODE' ? $depend->( $rule, @qr_params ) : $depend;
 
@@ -216,8 +218,6 @@ sub value_ref_if_recomputed {
 		      || ( $self->target_time($dep_target) > $self->target_time($target) ) ) );
 	    } );
 	}
-
-	$self->target_lock($rule) if ! $self->target_time($target);
 
 	if ( $self->target_locked($target) ) {
 	    # We should recompute this target
