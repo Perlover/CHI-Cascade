@@ -145,7 +145,9 @@ sub recompute {
     $self->{chi}->set( "v:$target", $value = CHI::Cascade::Value->new->value($ret), 'never' );
 
     $value->recomputed(1)->state( CASCADE_ACTUAL_VALUE | CASCADE_RECOMPUTED );
-    $rule->{recomputed}->( $rule, $target, $value ) if ( ref $rule->{recomputed} eq 'CODE' );
+
+    $rule->{recomputed}->( $rule, $target, $value )
+      if ( ref $rule->{recomputed} eq 'CODE' );
 
     return $value;
 }
