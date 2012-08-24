@@ -409,12 +409,12 @@ Options are:
 
 =item chi
 
-Required. Instance of L<CHI> object. The L<CHI::Cascade> doesn't construct this
+B<Required.> Instance of L<CHI> object. The L<CHI::Cascade> doesn't construct this
 object for you. Please create instance of C<CHI> yourself.
 
 =item busy_lock
 
-Optional. Default is I<never>. I<This is not C<busy_lock> option of CHI!> This
+B<Optional.> Default is I<never>. I<This is not C<busy_lock> option of CHI!> This
 is amount of time (to see L<CHI/"DURATION EXPRESSIONS">) until all target locks
 expire. When a target is recomputed it is locked. If process is to be
 recomputing target and it will die or OS will be hangs up we can dead locks and
@@ -423,7 +423,7 @@ can set up a special busy_lock for rules too.
 
 =item target_chi
 
-Optional. This is CHI cache for target markers. Default value is value of
+B<Optional.> This is CHI cache for target markers. Default value is value of
 L</chi> option. It can be useful if you use a L<CHI/l1_cache> option. So you can
 separate data of targets from target markers - data will be kept in a file cache
 and a marker in memory cache for example.
@@ -536,6 +536,10 @@ either a value is set by you (through L<CHI::Cascade::Value/value> method) or
 value from cache or C<undef> in other cases. Please to see
 L<CHI::Cascade::Value>
 
+If L</run> method will have a L</defer> option as B<true> this code will not be
+executed and you will get a set bit B<CASCADE_DEFERRED> in L</state> bit mask
+variable. This may useful when you want to control a target execution.
+
 =over
 
 =item $rule
@@ -607,12 +611,41 @@ target's value has been changed and is already in cache.
 
 =back
 
-=item run( $target )
+=item run( $target, %options )
 
 This method makes a cascade computing if need and returns value (value is
 cleaned value not L<CHI::Cascade::Value> object!) for this target If any
 dependence of this target of any dependencies of dependencies were recomputed
 this target will be recomputed too.
+
+=over
+
+=item $target
+
+B<Required.> Plain text string of target.
+
+=item %options
+
+B<Optional.> A hash of options. Valid keys and values are:
+
+=over
+
+=item state
+
+A B<scalarref> of variable where will be stored a state of L</run>. Value will
+be a bit mask.
+
+=item defer
+
+If value will be a B<true> then recompute method will be terminated and will not
+recomputed (no L</code> execution). After L</run> you can test should be
+recomputed the target now or not by testing the bit C<CASCADE_DEFERRED>. If the
+B<CASCADE_DEFERRED> bit is set you can recall L</run> method again or re-execute
+target in other process for a non-blocking execution of current process.
+
+=back
+
+=back
 
 =item touch( $target )
 

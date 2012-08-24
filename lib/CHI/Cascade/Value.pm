@@ -189,7 +189,52 @@ A getting or setting of state bits of value object.
 =head1 STATE BITS
 
 Since version 0.26 the CHI::Cascade introduces the concept of state bits. An
-every value object (even which has not valid value) has a history described by state bits. To use this bit mask we can know how this value was gotten.
+every value object (even which has not valid value) has a history described by
+state bits. To use this bit mask we can know how this value was gotten.
+
+=over
+
+=item CASCADE_NO_CACHE
+
+A value of target was missed in cache. Only as information as value was fetched
+
+=item CASCADE_COMPUTING
+
+A value of target to be computing in other process. So L<CHI::Cascade/run> will
+return to you a B<undef> (if it misses in cache) or B<old value from cache>.
+
+=item CASCADE_DEFERRED
+
+A value of target should be recomputed but was not recomputed because
+L<CHI::Cascade/run> was executed with L<CHI::Cascade/defer> option as B<true>.
+This useful when you want to control an excution of codes of targets yourself.
+
+=item CASCADE_FROM_CACHE
+
+A value of target is B<old> or B<actual> value and was fetched from cache.
+
+=item CASCADE_ACTUAL_VALUE
+
+A value of target is B<actual> value (should not be recomputed)
+
+=item CASCADE_RECOMPUTED
+
+A value of target was recomputed by your request right now (was called
+L<CHI::Cascade/code> in your process)
+
+=item CASCADE_CODE_EXCEPTION
+
+A code of target or code of any dependencies has raised an exception. A value of
+target can be B<undef> (if L<CHI::Cascade/code> or any code of dependencies
+threw exception as not L<CHI::Cascade::Value> object or cache doesn't have any
+value of target, for example C<< die "some error" >>), B<old value from cache>
+(if L<CHI::Cascade/code> or any code of dependencies threw exception as
+L<CHI::Cascade::Value> object without value and cache has any value for target,
+for example C<< die CHI::Cascade::Value->new >>) or B<value was thrown by
+exception> (example: C<< die CHI::Cascade::Value->new(123) >> and even same: C<<
+die CHI::Cascade::Value->new(undef) >>)
+
+=back
 
 =head1 AUTHOR
 
