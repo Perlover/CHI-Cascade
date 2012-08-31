@@ -111,7 +111,7 @@ sub target_unlock {
 	$trg_obj->unlock;
 
 	if ( $value ) {
-	    if ( $value->recomputed ) {
+	    if ( $value->state & CASCADE_RECOMPUTED ) {
 		$trg_obj->touch;
 	    }
 	    else {
@@ -175,7 +175,7 @@ sub recompute {
     # For performance a value should not expire in anyway (only target marker if need)
     $self->{chi}->set( "v:$target", $value = CHI::Cascade::Value->new->value($ret), 'never' );
 
-    $value->recomputed(1)->state( CASCADE_ACTUAL_VALUE | CASCADE_RECOMPUTED );
+    $value->state( CASCADE_ACTUAL_VALUE | CASCADE_RECOMPUTED );
 
     $rule->{recomputed}->( $rule, $target, $value )
       if ( ref $rule->{recomputed} eq 'CODE' );
@@ -249,7 +249,7 @@ sub value_ref_if_recomputed {
 	    $catcher->( sub {
 		$self->target_lock($rule)
 		  if (   ! $only_from_cache
-		      && ( ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->recomputed
+		      && ( ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->state & CASCADE_RECOMPUTED
 		      || ( $self->target_time($dep_target) > $self->target_time($target) ) ) );
 	    } );
 	}
