@@ -86,16 +86,6 @@ sub state_as_str {
     join( " | ", sort @names );
 }
 
-sub recomputed {
-    my $self = shift;
-
-    if (@_) {
-	$self->{recomputed} = $_[0];
-	return $self;
-    }
-    $self->{recomputed};
-}
-
 sub value {
     my $self = shift;
 
