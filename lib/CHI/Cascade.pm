@@ -54,11 +54,11 @@ sub target_computing {
 }
 
 sub target_is_actual {
-    my ( $self, $actual_term ) = @_;
+    my ( $self, $target, $actual_term ) = @_;
 
     my $trg_obj;
 
-    ( $trg_obj = $self->{target_chi}->get("t:$_[1]") )
+    ( $trg_obj = $self->{target_chi}->get("t:$target") )
       ? $trg_obj->is_actual( $actual_term )
       : 0;
 }
@@ -110,14 +110,8 @@ sub target_unlock {
     if ( my $trg_obj = $self->{target_chi}->get( "t:$target" ) ) {
 	$trg_obj->unlock;
 
-	if ( $value ) {
-	    if ( $value->state & CASCADE_RECOMPUTED ) {
-		$trg_obj->touch;
-	    }
-	    else {
-		$trg_obj->actual_stamp;
-	    }
-	}
+	1 && $trg_obj->touch, $self->{run_opts}{actual_term} && $self->{orig_target} eq $target && $trg_obj->actual_stamp
+	  if ( $value && $value->state & CASCADE_RECOMPUTED );
 
 	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->value_expires );
     }
@@ -130,7 +124,7 @@ sub target_actual_stamp {
 
     my $target = $rule->target;
 
-    if ( $value && ( my $trg_obj = $self->{target_chi}->get( "t:$target" ) ) ) {
+    if ( $value && $value->state & CASCADE_ACTUAL_VALUE && ( my $trg_obj = $self->{target_chi}->get( "t:$target" ) ) ) {
 	$trg_obj->actual_stamp;
 	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->value_expires );
     }
@@ -283,8 +277,7 @@ sub value_ref_if_recomputed {
     if ( $self->target_locked($target) ) {
 	$self->target_unlock( $rule, $ret );
     }
-    else {
-	# FIXME check it later.
+    elsif ( $self->{run_opts}{actual_term} && ! $only_from_cache && $self->{orig_target} eq $target ) {
 	$self->target_actual_stamp( $rule, $ret );
     }
 
@@ -300,7 +293,7 @@ sub run {
 
     $self->{run_opts} = \%opts;
 
-    $view_dependencies = ! $self->target_is_actual( $opts{actual_term} )
+    $view_dependencies = ! $self->target_is_actual( $target, $opts{actual_term} )
       if ( $opts{actual_term} );
 
     my $res = $self->_run( ! $view_dependencies, $target );

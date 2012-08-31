@@ -29,7 +29,7 @@ sub time {
 }
 
 sub touch {
-    $_[0]->{time} = $_[0]->{actual_stamp} = Time::HiRes::time;
+    $_[0]->{time} = Time::HiRes::time;
 }
 
 sub actual_stamp {
