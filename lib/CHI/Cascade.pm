@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2512;
+our $VERSION = 0.2513;
 
 use Carp;
 
@@ -294,7 +294,7 @@ sub run {
     my $view_dependencies = 1;
 
     $self->{run_opts} = \%opts;
-
+    $opts{actual_term} ||= $self->find($target)->{actual_term};
     $self->{stats}{run}++;
 
     $view_dependencies = ! $self->target_is_actual( $target, $opts{actual_term} )
