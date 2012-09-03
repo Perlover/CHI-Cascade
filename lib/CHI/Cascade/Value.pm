@@ -23,7 +23,10 @@ my %states = (
     CASCADE_RECOMPUTED			=> 1 << 5,
 
     # value = undef | old_value | value passed by exception -> code of target or code of any dependencies has raised an exception
-    CASCADE_CODE_EXCEPTION		=> 1 << 6
+    CASCADE_CODE_EXCEPTION		=> 1 << 6,
+
+    # value = old_value | actual_value - value may be actual or not but actual term isn valid (only if 'run' is run with 'actual_term' option)
+    CASCADE_ACTUAL_TERM			=> 1 << 7
 );
 
 for ( keys %states ) {

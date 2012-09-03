@@ -20,7 +20,7 @@ sub new {
 	    plain_targets	=> {},
 	    qr_targets		=> [],
 	    target_locks	=> {},
-	    stats		=> { recompute => 0 }
+	    stats		=> { recompute => 0, run => 0, dependencies_lookup => 0 }
 
 	}, ref($class) || $class;
 
@@ -68,7 +68,7 @@ sub target_time {
 
     my $trg_obj;
 
-    return ( ($trg_obj = $self->{target_chi}->get("t:$target") )
+    return ( ( $trg_obj = $self->{target_chi}->get("t:$target") )
       ? $trg_obj->time
       : 0
     );
@@ -243,7 +243,8 @@ sub value_ref_if_recomputed {
 	    $catcher->( sub {
 		$self->target_lock($rule)
 		  if (   ! $only_from_cache
-		      && ( ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->state & CASCADE_RECOMPUTED
+		      && ( $self->{stats}{dependencies_lookup}++,
+		           ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->state & CASCADE_RECOMPUTED
 		      || ( $self->target_time($dep_target) > $self->target_time($target) ) ) );
 	    } );
 	}
@@ -255,6 +256,7 @@ sub value_ref_if_recomputed {
 		if (   ! defined $dep_values{$dep_target}->[1]
 		    || ! $dep_values{$dep_target}->[1]->is_value )
 		{
+		    $self->{stats}{dependencies_lookup}++;
 		    $catcher->( sub {
 			if ( ! ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target, 1 ) )->is_value ) {
 			    $self->target_remove($dep_target);
@@ -293,10 +295,15 @@ sub run {
 
     $self->{run_opts} = \%opts;
 
+    $self->{stats}{run}++;
+
     $view_dependencies = ! $self->target_is_actual( $target, $opts{actual_term} )
       if ( $opts{actual_term} );
 
     my $res = $self->_run( ! $view_dependencies, $target );
+
+    $res->state( CASCADE_ACTUAL_TERM )
+      if ( $opts{actual_term} && ! $view_dependencies );
 
     ${ $opts{state} } = $res->state
       if ( $opts{state} );

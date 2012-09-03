@@ -46,7 +46,7 @@ if ( $? || ! (-f $pid_file )) {
     plan skip_all => "Cannot start the memcached for this test ($out)";
 }
 else {
-    plan tests => 15;
+    plan tests => 24;
 }
 
 my $cascade = CHI::Cascade->new(

@@ -37,7 +37,7 @@ sub actual_stamp {
 }
 
 sub is_actual {
-    ( $_[0]->{actual_stamp} || $_[0]->{time} || Time::HiRes::time ) + $_[1] >= Time::HiRes::time;
+    ( $_[0]->{actual_stamp} || $_[0]->{time} || 0 ) + $_[1] >= Time::HiRes::time;
 }
 
 1;
