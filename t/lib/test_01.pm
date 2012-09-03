@@ -37,6 +37,15 @@ sub test_cascade {
 	recomputed	=> sub { $recomputed++ }
     );
 
+    $cascade->rule(
+	target		=> 'actual_test',
+	actual_term	=> 2.0,
+	depends		=> 'one_page_0',
+	code		=> sub {
+	    $_[2]->{one_page_0}
+	}
+    );
+
     ok( $cascade->{stats}{recompute} == 0, 'recompute stats - 1');
 
     is_deeply( $cascade->run('one_page_0'), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache');
@@ -65,23 +74,40 @@ sub test_cascade {
     ok( $cascade->{stats}{recompute} == $recomputed, 'recompute stats - 8');
 
     # To checking of actual_term option
-    $cascade->touch('big_array');
-
     my $state = 0;
 
-    is_deeply( $cascade->run( 'one_page_0', state => \$state, actual_term => 2.0 ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache after touching');
-    ok( $cascade->{stats}{recompute} == 5, 'recompute stats - 9');
-    ok( $state & CASCADE_ACTUAL_TERM, 'recompute stats - 10' );
+    is_deeply( $cascade->run( 'actual_test', state => \$state ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], 'actual_test');
+    ok( $cascade->{stats}{recompute} == 6 );
 
-    is_deeply( $cascade->run('one_page_1', state => \$state, actual_term => 2.0), [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ], '1th page from cache after touching');
-    ok( $cascade->{stats}{recompute} == 5, 'recompute stats - 11');
-    ok( $state & CASCADE_ACTUAL_TERM, 'recompute stats - 12' );
+    $cascade->touch('big_array');
+
+    my $dependencies_lookup = $cascade->{stats}{dependencies_lookup};
+
+    is_deeply( $cascade->run( 'one_page_0', state => \$state, actual_term => 2.0 ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache after touching');
+    ok( $state & CASCADE_ACTUAL_TERM );
+
+    is_deeply( $cascade->run( 'actual_test', state => \$state ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], 'actual_test');
+    ok( $state & CASCADE_ACTUAL_TERM );
+
+    is_deeply( $cascade->run('one_page_1', state => \$state, actual_term => 2.0), [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ] );
+    ok( $cascade->{stats}{recompute} == 6 );
+    ok( $state & CASCADE_ACTUAL_TERM );
+
+    ok( $cascade->{stats}{dependencies_lookup} == $dependencies_lookup );
 
     select( undef, undef, undef, 2.2 );
 
     is_deeply( $cascade->run( 'one_page_0', state => \$state, actual_term => 2.0 ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache after touching');
-    ok( $cascade->{stats}{recompute} == 6, 'recompute stats - 13');
-    ok( ! ( $state & CASCADE_ACTUAL_TERM ), 'recompute stats - 14' );
+    ok( $cascade->{stats}{recompute} == 7 );
+    ok( not $state & CASCADE_ACTUAL_TERM );
+
+    ok( $cascade->{stats}{dependencies_lookup} > $dependencies_lookup );
+
+    $dependencies_lookup = $cascade->{stats}{dependencies_lookup};
+
+    is_deeply( $cascade->run( 'actual_test', state => \$state ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], 'actual_test');
+    ok( $cascade->{stats}{dependencies_lookup} > $dependencies_lookup );
+    ok( $cascade->{stats}{recompute} == 8 );
 }
 
 1;
