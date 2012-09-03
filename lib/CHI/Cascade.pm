@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2511;
+our $VERSION = 0.2512;
 
 use Carp;
 
