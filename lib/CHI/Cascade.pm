@@ -20,7 +20,7 @@ sub new {
 	    plain_targets	=> {},
 	    qr_targets		=> [],
 	    target_locks	=> {},
-	    stats		=> { recompute => 0 }
+	    stats		=> { recompute => 0, run => 0, dependencies_lookup => 0 }
 
 	}, ref($class) || $class;
 
@@ -48,8 +48,18 @@ sub rule {
 sub target_computing {
     my $trg_obj;
 
-    ($trg_obj = $_[0]->{target_chi}->get("t:$_[1]"))
+    ( $trg_obj = $_[0]->{target_chi}->get("t:$_[1]") )
       ? ( $trg_obj->locked ? 1 : 0 )
+      : 0;
+}
+
+sub target_is_actual {
+    my ( $self, $target, $actual_term ) = @_;
+
+    my $trg_obj;
+
+    ( $trg_obj = $self->{target_chi}->get("t:$target") )
+      ? $trg_obj->is_actual( $actual_term )
       : 0;
 }
 
@@ -58,7 +68,7 @@ sub target_time {
 
     my $trg_obj;
 
-    return ( ($trg_obj = $self->{target_chi}->get("t:$target"))
+    return ( ( $trg_obj = $self->{target_chi}->get("t:$target") )
       ? $trg_obj->time
       : 0
     );
@@ -69,7 +79,8 @@ sub get_value {
 
     my $value = $self->{chi}->get("v:$target");
 
-    return $value->state( CASCADE_FROM_CACHE ) if ($value);
+    return $value->state( CASCADE_FROM_CACHE )
+      if ($value);
 
     CHI::Cascade::Value->new( state => CASCADE_NO_CACHE );
 }
@@ -98,11 +109,25 @@ sub target_unlock {
 
     if ( my $trg_obj = $self->{target_chi}->get( "t:$target" ) ) {
 	$trg_obj->unlock;
-	$trg_obj->touch if $value && $value->recomputed;
+
+	1 && $trg_obj->touch, $self->{run_opts}{actual_term} && $self->{orig_target} eq $target && $trg_obj->actual_stamp
+	  if ( $value && $value->state & CASCADE_RECOMPUTED );
+
 	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->value_expires );
     }
 
     delete $self->{target_locks}{$target};
+}
+
+sub target_actual_stamp {
+    my ( $self, $rule, $value ) = @_;
+
+    my $target = $rule->target;
+
+    if ( $value && $value->state & CASCADE_ACTUAL_VALUE && ( my $trg_obj = $self->{target_chi}->get( "t:$target" ) ) ) {
+	$trg_obj->actual_stamp;
+	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->value_expires );
+    }
 }
 
 sub target_remove {
@@ -144,7 +169,7 @@ sub recompute {
     # For performance a value should not expire in anyway (only target marker if need)
     $self->{chi}->set( "v:$target", $value = CHI::Cascade::Value->new->value($ret), 'never' );
 
-    $value->recomputed(1)->state( CASCADE_ACTUAL_VALUE | CASCADE_RECOMPUTED );
+    $value->state( CASCADE_ACTUAL_VALUE | CASCADE_RECOMPUTED );
 
     $rule->{recomputed}->( $rule, $target, $value )
       if ( ref $rule->{recomputed} eq 'CODE' );
@@ -172,7 +197,8 @@ sub value_ref_if_recomputed {
 	# Trying to get value from cache
 	my $value = $self->get_value($target);
 
-	return $value if $value->is_value;
+	return $value
+	  if $value->is_value;
 
 	# If no in cache - we should recompute it again
 	$self->target_lock($rule);
@@ -201,7 +227,8 @@ sub value_ref_if_recomputed {
 	    return $ret;
 	};
 
-	$self->target_lock($rule) if ! $self->target_time($target);
+	$self->target_lock($rule)
+	  if ! $self->target_time($target);
 
 	foreach my $depend (@{ $rule->depends }) {
 	    $dep_target = ref($depend) eq 'CODE' ? $depend->( $rule, @qr_params ) : $depend;
@@ -216,7 +243,8 @@ sub value_ref_if_recomputed {
 	    $catcher->( sub {
 		$self->target_lock($rule)
 		  if (   ! $only_from_cache
-		      && ( ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->recomputed
+		      && ( $self->{stats}{dependencies_lookup}++,
+		           ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->state & CASCADE_RECOMPUTED
 		      || ( $self->target_time($dep_target) > $self->target_time($target) ) ) );
 	    } );
 	}
@@ -228,6 +256,7 @@ sub value_ref_if_recomputed {
 		if (   ! defined $dep_values{$dep_target}->[1]
 		    || ! $dep_values{$dep_target}->[1]->is_value )
 		{
+		    $self->{stats}{dependencies_lookup}++;
 		    $catcher->( sub {
 			if ( ! ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target, 1 ) )->is_value ) {
 			    $self->target_remove($dep_target);
@@ -246,8 +275,14 @@ sub value_ref_if_recomputed {
     };
 
     my $e = $@;
-    $self->target_unlock( $rule, $ret )
-      if $self->target_locked($target);
+
+    if ( $self->target_locked($target) ) {
+	$self->target_unlock( $rule, $ret );
+    }
+    elsif ( $self->{run_opts}{actual_term} && ! $only_from_cache && $self->{orig_target} eq $target ) {
+	$self->target_actual_stamp( $rule, $ret );
+    }
+
     die $e if $e;
 
     return $ret || CHI::Cascade::Value->new;
@@ -256,9 +291,19 @@ sub value_ref_if_recomputed {
 sub run {
     my ( $self, $target, %opts ) = @_;
 
+    my $view_dependencies = 1;
+
     $self->{run_opts} = \%opts;
 
-    my $res = $self->_run( 0, $target );
+    $self->{stats}{run}++;
+
+    $view_dependencies = ! $self->target_is_actual( $target, $opts{actual_term} )
+      if ( $opts{actual_term} );
+
+    my $res = $self->_run( ! $view_dependencies, $target );
+
+    $res->state( CASCADE_ACTUAL_TERM )
+      if ( $opts{actual_term} && ! $view_dependencies );
 
     ${ $opts{state} } = $res->state
       if ( $opts{state} );

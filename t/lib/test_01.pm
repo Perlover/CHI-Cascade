@@ -2,6 +2,7 @@ package test_01;
 
 use strict;
 use Test::More;
+use CHI::Cascade::Value ':state';
 
 use parent 'Exporter';
 
@@ -62,6 +63,25 @@ sub test_cascade {
     cmp_ok( $cascade->{stats}{recompute}, '==', 5, 'recompute stats - 7');
 
     ok( $cascade->{stats}{recompute} == $recomputed, 'recompute stats - 8');
+
+    # To checking of actual_term option
+    $cascade->touch('big_array');
+
+    my $state = 0;
+
+    is_deeply( $cascade->run( 'one_page_0', state => \$state, actual_term => 2.0 ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache after touching');
+    ok( $cascade->{stats}{recompute} == 5, 'recompute stats - 9');
+    ok( $state & CASCADE_ACTUAL_TERM, 'recompute stats - 10' );
+
+    is_deeply( $cascade->run('one_page_1', state => \$state, actual_term => 2.0), [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ], '1th page from cache after touching');
+    ok( $cascade->{stats}{recompute} == 5, 'recompute stats - 11');
+    ok( $state & CASCADE_ACTUAL_TERM, 'recompute stats - 12' );
+
+    select( undef, undef, undef, 2.2 );
+
+    is_deeply( $cascade->run( 'one_page_0', state => \$state, actual_term => 2.0 ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache after touching');
+    ok( $cascade->{stats}{recompute} == 6, 'recompute stats - 13');
+    ok( ! ( $state & CASCADE_ACTUAL_TERM ), 'recompute stats - 14' );
 }
 
 1;

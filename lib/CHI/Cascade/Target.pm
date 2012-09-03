@@ -32,4 +32,12 @@ sub touch {
     $_[0]->{time} = Time::HiRes::time;
 }
 
+sub actual_stamp {
+    $_[0]->{actual_stamp} = Time::HiRes::time;
+}
+
+sub is_actual {
+    ( $_[0]->{actual_stamp} || $_[0]->{time} || 0 ) + $_[1] >= Time::HiRes::time;
+}
+
 1;
