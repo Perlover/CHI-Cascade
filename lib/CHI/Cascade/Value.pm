@@ -227,6 +227,12 @@ for example C<< die CHI::Cascade::Value->new >>) or B<value was thrown by
 exception> (example: C<< die CHI::Cascade::Value->new(123) >> and even same: C<<
 die CHI::Cascade::Value->new(undef) >>)
 
+=item CASCADE_ACTUAL_TERM
+
+The method L<CHI::Cascade/run> was run with L<actual_term|CHI::Cascade/actual_term> option
+and C<actual term> is actual for this value (a value can be old - the
+CASCADE_ACTUAL_VALUE bit will not be set).
+
 =back
 
 =head1 AUTHOR

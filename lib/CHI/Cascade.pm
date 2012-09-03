@@ -688,6 +688,19 @@ recomputed the target now or not by testing the bit C<CASCADE_DEFERRED>. If the
 B<CASCADE_DEFERRED> bit is set you can recall L</run> method again or re-execute
 target in other process for a non-blocking execution of current process.
 
+=item actual_term
+
+The value in seconds (a floating point value) of actual term. The actual term is
+period when dependencies to be checked for $target in L</run> method. If this
+option is not defined then the L</run> method checks a dependencies of $target
+every time in runtime. But sometimes (when a target has many dependencies) we
+could want to reduce an amount of dependencies checks. For example if
+C<actual_term> will be defined as C<2.5> this will mean to check a dependencies
+only every 2.5 seconds. So recomputing in this example can be recomputed only
+one time in every 2.5 seconds (even if one from dependencies will be updated).
+But if value of $target is missing in cache a recomputing can be
+run regardless of this option.
+
 =back
 
 =back
