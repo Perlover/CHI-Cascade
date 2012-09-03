@@ -14,6 +14,9 @@ NEXT (may be 0.26)
     *) Fix few bug with target locking
     *) Fixed unproductive code piece of value with expiring
     *) Fixed unproductive code with target locking
+    *) Changed some tests for testing the 'actual_term' option
+    +) Added stats  for operations 'run' & 'dependencies_lookup'
+    +) Added the bit state CASCADE_ACTUAL_TERM
 
 0.25001
     *) Few fix - should improve tests
