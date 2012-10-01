@@ -80,7 +80,7 @@ CHI::Cascade::Rule - a rule class
 	code	=> sub {
 	    my ( $rule, $target, $dep_values ) = @_;
 
-	    # For executino of $cascade->run('target_12') will be:
+	    # An execution of $cascade->run('target_12') will pass in code a $rule as:
 	    #
 	    # $rule->target	eq	$target
 	    # $rule->depends	===	[ 'base_target' ]
@@ -110,7 +110,7 @@ to some parameters of your currect executed target.
 
 =item qr_params
 
-returns a list. Is used for getting a result of C<=~> operation if target is
+returns a list. It is used for getting a result of C<=~> operation if target is
 described for L<rule|CHI::Cascade/rule> through C<qr//> operator.
 
 =item depends
