@@ -26,7 +26,10 @@ my %states = (
     CASCADE_CODE_EXCEPTION		=> 1 << 6,
 
     # value = old_value | actual_value - value may be actual or not but actual term isn valid (only if 'run' is run with 'actual_term' option)
-    CASCADE_ACTUAL_TERM			=> 1 << 7
+    CASCADE_ACTUAL_TERM			=> 1 << 7,
+
+    # Some dependencies are affected for recomputing, but no recomputing now - only TTL period and value from cache
+    CASCADE_TTL_INTRODUCED		=> 1 << 8
 );
 
 for ( keys %states ) {

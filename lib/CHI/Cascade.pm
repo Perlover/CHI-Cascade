@@ -49,7 +49,7 @@ sub target_computing {
     my $trg_obj;
 
     ( $trg_obj = $_[0]->{target_chi}->get("t:$_[1]") )
-      ? ( $trg_obj->locked ? 1 : 0 )
+      ? ( ( $$_[2] = $trg_obj->ttl ), $trg_obj->locked ? 1 : 0 )
       : 0;
 }
 
@@ -130,6 +130,17 @@ sub target_actual_stamp {
     }
 }
 
+sub target_start_ttl {
+    my ( $self, $rule ) = @_;
+
+    my $target = $rule->target;
+
+    if ( my $trg_obj = $self->{target_chi}->get( "t:$target" ) ) {
+	$trg_obj->ttl( $rule->ttl );
+	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->value_expires );
+    }
+}
+
 sub target_remove {
     my ($self, $target) = @_;
 
@@ -184,7 +195,9 @@ sub value_ref_if_recomputed {
 
     my @qr_params = $rule->qr_params;
 
-    if ( $self->target_computing($target) ) {
+    my ( $ret_state, $ttl, $ttl_recompute ) = ( CASCADE_ACTUAL_VALUE );
+
+    if ( $self->target_computing( $target, \$ttl ) ) {
 	# If we have any target as a being computed (dependencie/original)
 	# there is no need to compute anything - trying to return original target value
 	die CHI::Cascade::Value->new->state( CASCADE_COMPUTING );
@@ -230,23 +243,42 @@ sub value_ref_if_recomputed {
 	$self->target_lock($rule)
 	  if ! $self->target_time($target);
 
-	foreach my $depend (@{ $rule->depends }) {
-	    $dep_target = ref($depend) eq 'CODE' ? $depend->( $rule, @qr_params ) : $depend;
+	$ttl_recompute = $self->target_locked($target);
 
-	    $dep_values{$dep_target}->[0] = $self->find($dep_target);
+	if ( defined $ttl && $ttl > 0 && ! $ttl_recompute ) {
+	    $ret_state = CASCADE_TTL_INTRODUCED;
+	}
+	else {
+	    my $rule_ttl = $rule->ttl;
 
-	    die qq{Found circle dependencies ( target '$target' <--> '$dep_target' ) - aborted!"}
-	      if ( exists $self->{ $only_from_cache ? 'only_cache_chain' : 'chain' }{$target}{$dep_target} );
+	    foreach my $depend (@{ $rule->depends }) {
+		$dep_target = ref($depend) eq 'CODE' ? $depend->( $rule, @qr_params ) : $depend;
 
-	    $self->{ $only_from_cache ? 'only_cache_chain' : 'chain' }{$target}{$dep_target} = 1;
+		$dep_values{$dep_target}->[0] = $self->find($dep_target);
 
-	    $catcher->( sub {
-		$self->target_lock($rule)
-		  if (   ! $only_from_cache
-		      && ( $self->{stats}{dependencies_lookup}++,
-		           ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->state & CASCADE_RECOMPUTED
-		      || ( $self->target_time($dep_target) > $self->target_time($target) ) ) );
-	    } );
+		die qq{Found circle dependencies ( target '$target' <--> '$dep_target' ) - aborted!"}
+		  if ( exists $self->{ $only_from_cache ? 'only_cache_chain' : 'chain' }{$target}{$dep_target} );
+
+		$self->{ $only_from_cache ? 'only_cache_chain' : 'chain' }{$target}{$dep_target} = 1;
+
+		$catcher->( sub {
+		    if (   ! $only_from_cache
+			&& ( $self->{stats}{dependencies_lookup}++,
+			     ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->state & CASCADE_RECOMPUTED
+			|| ( $self->target_time($dep_target) > $self->target_time($target) ) ) )
+		    {
+			if ( defined $rule_ttl && $rule_ttl > 0 && ! defined $ttl && ! $ttl_recompute ) {
+			    $self->target_start_ttl($rule);
+			    $ret_state = CASCADE_TTL_INTRODUCED;
+			    return 1;
+			}
+			else {
+			    $self->target_lock($rule);
+			    return 0;
+			}
+		    }
+		} ) == 1 && last;
+	    }
 	}
 
 	if ( $self->target_locked($target) ) {
@@ -271,7 +303,7 @@ sub value_ref_if_recomputed {
 	return $self->recompute( $rule, $target, { map { $_ => $dep_values{$_}->[1]->value } keys %dep_values } )
 	  if $self->target_locked($target);
 
-	return CHI::Cascade::Value->new( state => CASCADE_ACTUAL_VALUE );
+	return CHI::Cascade::Value->new( state => $ret_state );
     };
 
     my $e = $@;

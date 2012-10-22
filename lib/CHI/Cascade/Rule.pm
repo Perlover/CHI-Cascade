@@ -10,13 +10,14 @@ sub new {
 
     my $from = ref($class) ? $class : \%opts;
 
-    $opts{depends} = [ defined( $opts{depends} ) ? ( $opts{depends} ) : () ] unless ref( $opts{depends} );
+    $opts{depends} = [ defined( $opts{depends} ) ? ( $opts{depends} ) : () ]
+      unless ref( $opts{depends} );
 
     # To do clone or new object
     my $self = bless {
 	map( { $_ => $from->{$_} }
 	  grep { exists $from->{$_} }
-	  qw( target depends depends_catch code params busy_lock cascade recomputed actual_term )),
+	  qw( target depends depends_catch code params busy_lock cascade recomputed actual_term ttl ) ),
 	qr_params	=> [],
 	matched_target	=> undef
     }, ref($class) || $class;
@@ -59,6 +60,23 @@ sub value_expires {
     $self->{value_expires} || 'never';
 }
 
+sub ttl {
+    my $self = shift;
+
+    return undef
+      unless exists $self->{ttl};
+
+    $self->{ttl_time} && return $self->{ttl_time};
+
+    if ( ref $self->{ttl} eq 'ARRAY' && @{ $self->{ttl} } == 2 ) {
+	return $self->{ttl_time} = rand( $self->{ttl}[1] - $self->{ttl}[0] ) + $self->{ttl}[0];
+    }
+    elsif ( ref $self->{ttl} eq 'CODE' ) {
+	return $self->{ttl_time} = $self->{ttl}->( $self, $self->qr_params );
+    }
+
+    return undef;
+}
 
 sub target	{ shift->{matched_target}	}
 sub params	{ shift->{params}		}
