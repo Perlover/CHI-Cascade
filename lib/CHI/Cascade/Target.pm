@@ -30,6 +30,7 @@ sub time {
 
 sub touch {
     $_[0]->{time} = Time::HiRes::time;
+    delete $_[0]->{finish_time};
 }
 
 sub actual_stamp {

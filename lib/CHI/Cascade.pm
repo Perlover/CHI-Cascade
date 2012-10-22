@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2514;
+our $VERSION = 0.2515;
 
 use Carp;
 
@@ -49,7 +49,7 @@ sub target_computing {
     my $trg_obj;
 
     ( $trg_obj = $_[0]->{target_chi}->get("t:$_[1]") )
-      ? ( ( $$_[2] = $trg_obj->ttl ), $trg_obj->locked ? 1 : 0 )
+      ? ( ( ${ $_[2] } = $trg_obj->ttl ), $trg_obj->locked ? 1 : 0 )
       : 0;
 }
 
@@ -247,6 +247,7 @@ sub value_ref_if_recomputed {
 
 	if ( defined $ttl && $ttl > 0 && ! $ttl_recompute ) {
 	    $ret_state = CASCADE_TTL_INTRODUCED;
+	    $self->{ttl} = $ttl;
 	}
 	else {
 	    my $rule_ttl = $rule->ttl;
@@ -270,6 +271,7 @@ sub value_ref_if_recomputed {
 			if ( defined $rule_ttl && $rule_ttl > 0 && ! defined $ttl && ! $ttl_recompute ) {
 			    $self->target_start_ttl($rule);
 			    $ret_state = CASCADE_TTL_INTRODUCED;
+			    $self->{ttl} = $rule_ttl;
 			    return 1;
 			}
 			else {
@@ -325,7 +327,8 @@ sub run {
 
     my $view_dependencies = 1;
 
-    $self->{run_opts} = \%opts;
+    $self->{run_opts}    = \%opts;
+    $self->{ttl}         = undef;
     $opts{actual_term} ||= $self->find($target)->{actual_term};
     $self->{stats}{run}++;
 
@@ -336,6 +339,13 @@ sub run {
 
     $res->state( CASCADE_ACTUAL_TERM )
       if ( $opts{actual_term} && ! $view_dependencies );
+
+    if ( defined $self->{ttl} && $self->{ttl} > 0 ) {
+	$res->state( CASCADE_TTL_INTRODUCED );
+    }
+
+    ${ $opts{ttl} } = $self->{ttl}
+      if ( $opts{ttl} );
 
     ${ $opts{state} } = $res->state
       if ( $opts{state} );
