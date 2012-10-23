@@ -246,7 +246,7 @@ sub value_ref_if_recomputed {
 	$ttl_recompute = $self->target_locked($target);
 
 	if ( defined $ttl && $ttl > 0 && ! $ttl_recompute ) {
-	    $ret_state = CASCADE_TTL_INTRODUCED;
+	    $ret_state = CASCADE_TTL_INVOLVED;
 	    $self->{ttl} = $ttl;
 	}
 	else {
@@ -270,7 +270,7 @@ sub value_ref_if_recomputed {
 		    {
 			if ( defined $rule_ttl && $rule_ttl > 0 && ! defined $ttl && ! $ttl_recompute ) {
 			    $self->target_start_ttl($rule);
-			    $ret_state = CASCADE_TTL_INTRODUCED;
+			    $ret_state = CASCADE_TTL_INVOLVED;
 			    $self->{ttl} = $rule_ttl;
 			    return 1;
 			}
@@ -341,7 +341,7 @@ sub run {
       if ( $opts{actual_term} && ! $view_dependencies );
 
     if ( defined $self->{ttl} && $self->{ttl} > 0 ) {
-	$res->state( CASCADE_TTL_INTRODUCED );
+	$res->state( CASCADE_TTL_INVOLVED );
     }
 
     ${ $opts{ttl} } = $self->{ttl}

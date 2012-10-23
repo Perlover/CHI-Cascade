@@ -14,7 +14,7 @@ my $recomputed;
 sub test_cascade {
     my $cascade = shift;
 
-    plan tests => 19;
+    plan tests => 32;
 
     $cascade->rule(
 	target		=> 'reset',
@@ -52,22 +52,45 @@ sub test_cascade {
     is_deeply( $res, [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ] );
     ok( $cascade->{stats}{recompute} == 4 );
     ok( ! defined $ttl );
+
     $cascade->target_remove('reset');
+
     ok( defined( $res = $cascade->run( 'one_page_0', state => \$state, ttl => \$ttl ) ) );
     is_deeply( $res, [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ] );
     ok( $cascade->{stats}{recompute} == 5 ); # reset is recomputed now but the one_page_0 is not
-    ok( $state & CASCADE_TTL_INTRODUCED );
+    ok( $state & CASCADE_TTL_INVOLVED );
     ok( not $state & CASCADE_RECOMPUTED );
     ok( defined $ttl && $ttl > 0 );
 
-    select( undef, undef, undef, 2.1 );
+    my $prevTTL = $ttl;
+
+    select( undef, undef, undef, 0.2 );
+
+    # Not ttl will be reduced by ~ 0.2 seconds
+    ok( defined( $res = $cascade->run( 'one_page_0', state => \$state, ttl => \$ttl ) ) );
+    is_deeply( $res, [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ] );
+    ok( $cascade->{stats}{recompute} == 5 );
+    ok( $state & CASCADE_TTL_INVOLVED );
+    ok( not $state & CASCADE_RECOMPUTED );
+    ok( defined $ttl && $ttl > 0 );
+    ok( $prevTTL - $ttl > 0.1 && $prevTTL - $ttl < 0.3 );
+
+    select( undef, undef, undef, 1.9 );
+
+    # Maximum (2 seconds) ttl has been reached now ( 0.2 + 1.9 time elapsed)
+    ok( defined( $res = $cascade->run( 'one_page_0', state => \$state, ttl => \$ttl ) ) );
+    ok( ! defined $ttl );
+    is_deeply( $res, [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ] );
+    ok( $cascade->{stats}{recompute} == 7 );
+    ok( not $state & CASCADE_TTL_INVOLVED );
+    ok( $state & CASCADE_RECOMPUTED );
 
     ok( defined( $res = $cascade->run( 'one_page_0', state => \$state, ttl => \$ttl ) ) );
     ok( ! defined $ttl );
     is_deeply( $res, [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ] );
     ok( $cascade->{stats}{recompute} == 7 );
-    ok( not $state & CASCADE_TTL_INTRODUCED );
-    ok( $state & CASCADE_RECOMPUTED );
+    ok( not $state & CASCADE_TTL_INVOLVED );
+    ok( ( $state & ( CASCADE_ACTUAL_VALUE | CASCADE_FROM_CACHE ) ) == ( CASCADE_ACTUAL_VALUE | CASCADE_FROM_CACHE ) );
 }
 
 1;

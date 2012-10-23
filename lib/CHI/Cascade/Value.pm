@@ -29,7 +29,7 @@ my %states = (
     CASCADE_ACTUAL_TERM			=> 1 << 7,
 
     # Some dependencies are affected for recomputing, but no recomputing now - only TTL period and value from cache
-    CASCADE_TTL_INTRODUCED		=> 1 << 8
+    CASCADE_TTL_INVOLVED		=> 1 << 8
 );
 
 for ( keys %states ) {
