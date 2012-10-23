@@ -45,7 +45,7 @@ sub ttl {
     my $self = shift;
 
     if (@_) {
-	$self->{finish_time} = Time::HiRes::time + $_[0];
+	$self->{finish_time} = ( $_[1] || Time::HiRes::time ) + $_[0];
 	return $self;
     }
     else {

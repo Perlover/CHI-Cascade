@@ -3,13 +3,14 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2515;
+our $VERSION = 0.2516;
 
 use Carp;
 
 use CHI::Cascade::Value ':state';
 use CHI::Cascade::Rule;
 use CHI::Cascade::Target;
+use Time::HiRes ();
 use POSIX ();
 
 sub new {
@@ -131,12 +132,12 @@ sub target_actual_stamp {
 }
 
 sub target_start_ttl {
-    my ( $self, $rule ) = @_;
+    my ( $self, $rule, $start_time ) = @_;
 
     my $target = $rule->target;
 
     if ( my $trg_obj = $self->{target_chi}->get( "t:$target" ) ) {
-	$trg_obj->ttl( $rule->ttl );
+	$trg_obj->ttl( $rule->ttl, $start_time );
 	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->value_expires );
     }
 }
@@ -250,7 +251,7 @@ sub value_ref_if_recomputed {
 	    $self->{ttl} = $ttl;
 	}
 	else {
-	    my $rule_ttl = $rule->ttl;
+	    my ( $rule_ttl, $start_time ) = ( $rule->ttl );
 
 	    foreach my $depend (@{ $rule->depends }) {
 		$dep_target = ref($depend) eq 'CODE' ? $depend->( $rule, @qr_params ) : $depend;
@@ -264,14 +265,14 @@ sub value_ref_if_recomputed {
 
 		$catcher->( sub {
 		    if (   ! $only_from_cache
-			&& ( $self->{stats}{dependencies_lookup}++,
-			     ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->state & CASCADE_RECOMPUTED
-			|| ( $self->target_time($dep_target) > $self->target_time($target) ) ) )
+			&& ( $start_time = ( $self->{stats}{dependencies_lookup}++,
+			     ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->state & CASCADE_RECOMPUTED && Time::HiRes::time
+			|| ( $start_time = $self->target_time($dep_target) ) > $self->target_time($target) && $start_time ) ) )
 		    {
-			if ( defined $rule_ttl && $rule_ttl > 0 && ! defined $ttl && ! $ttl_recompute ) {
-			    $self->target_start_ttl($rule);
+			if ( defined $rule_ttl && $rule_ttl > 0 && ! defined $ttl && ! $ttl_recompute && ( $start_time + $rule_ttl ) > Time::HiRes::time ) {
+			    $self->target_start_ttl( $rule, $start_time );
 			    $ret_state = CASCADE_TTL_INVOLVED;
-			    $self->{ttl} = $rule_ttl;
+			    $self->{ttl} = $start_time + $rule_ttl - Time::HiRes::time;
 			    return 1;
 			}
 			else {
