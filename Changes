@@ -19,6 +19,9 @@ NEXT (may be 0.26)
     +) Added the bit state CASCADE_ACTUAL_TERM
     +) Added 'ttl' feature. No docs yet but there is tests for it
     +) CHI::Cascade->rule now has the new option: value_expires
+    *) Memcached tests are skipped by default. They use a starting of memcached
+       and from cpanm they doesn't work. If you want to tests please use this
+       method: perl Makefile.PL; FORCE_MEMCACHED_TESTS= make test && make install
 
 0.25001
     *) Few fix - should improve tests

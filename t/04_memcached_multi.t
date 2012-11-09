@@ -14,6 +14,9 @@ use constant QUICK_DELAY	=> 0.5;
 plan skip_all => 'Not installed CHI::Driver::Memcached::Fast'
   unless eval "use CHI::Driver::Memcached::Fast; 1";
 
+plan skip_all => 'Memcached tests are skipped (to define FORCE_MEMCACHED_TESTS environment variable if you want)'
+  unless defined $ENV{FORCE_MEMCACHED_TESTS};
+
 my ($pid_file, $socket_file, $cwd, $user_opt);
 
 chomp($cwd = `pwd`);
