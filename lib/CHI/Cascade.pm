@@ -497,12 +497,12 @@ Options are:
 
 =item chi
 
-B<Required.> Instance of L<CHI> object. The L<CHI::Cascade> doesn't construct this
+B<Required>. Instance of L<CHI> object. The L<CHI::Cascade> doesn't construct this
 object for you. Please create instance of C<CHI> yourself.
 
 =item busy_lock
 
-B<Optional.> Default is I<never>. I<This is not C<busy_lock> option of CHI!> This
+B<Optional>. Default is I<never>. I<This is not C<busy_lock> option of CHI!> This
 is amount of time (to see L<CHI/"DURATION EXPRESSIONS">) until all target locks
 expire. When a target is recomputed it is locked. If process is to be
 recomputing target and it will die or OS will be hangs up we can dead locks and
@@ -511,7 +511,7 @@ can set up a special busy_lock for rules too.
 
 =item target_chi
 
-B<Optional.> This is CHI cache for target markers. Default value is value of
+B<Optional>. This is CHI cache for target markers. Default value is value of
 L</chi> option. It can be useful if you use a L<CHI/l1_cache> option. So you can
 separate data of targets from target markers - data will be kept in a file cache
 and a marker in memory cache for example.
@@ -527,18 +527,18 @@ and a marker in memory cache for example.
 To add new rule to C<CHI::Cascade> object. All rules should be added before
 first L</run> method
 
-The keys of %options are:
+The keys of %options are (options are passed directly in L<CHI::Cascade::Rule> constructor):
 
 =over
 
 =item target
 
-B<Required.> A target for L</run> and for searching of L</depends>. It can be as
+B<Required>. A target for L</run> and for searching of L</depends>. It can be as
 scalar text or C<Regexp> object created through C<qr//>
 
 =item depends
 
-B<Optional.> The B<scalar>, B<arrayref> or B<coderef> values of dependencies.
+B<Optional>. The B<scalar>, B<arrayref> or B<coderef> values of dependencies.
 This is the definition of target(s) from which this current rule is dependent.
 If I<depends> is:
 
@@ -572,7 +572,7 @@ this paragraph.
 
 =item depends_catch
 
-B<Optional.> This is B<coderef> for dependence exceptions. If any dependence
+B<Optional>. This is B<coderef> for dependence exceptions. If any dependence
 from list of L</depends>'s option throws an exception of type
 CHI::Cascade::Value by C<die> (for example like this code: C<< die
 CHI::Cascade::Value->new->value( { i_have_problem => 1 } ) >> ) then the
@@ -610,7 +610,7 @@ dependencies before execution of dependent code.
 
 =item code
 
-B<Required.> The code reference for computing a value of this target (a
+B<Required>. The code reference for computing a value of this target (a
 recompute code). Will be executed if no value in cache for this target or
 any dependence or dependences of dependences and so on will be recomputed. Will
 be executed as C<< $code->( $rule, $target, $hashref_to_value_of_dependencies )
@@ -656,13 +656,13 @@ last will not be executed (The C<run> will return C<undef>).
 
 =item params
 
-You can pass in your code any additional parameters by this option. These
+B<Optional>. You can pass in your code any additional parameters by this option. These
 parameters are accessed in your code through L<CHI::Cascade::Rule/params>
 method of L<CHI::Cascade::Rule> instance object.
 
 =item busy_lock
 
-Optional. Default is L</busy_lock> of constructor or I<never> if first is not
+B<Optional>. Default is L</busy_lock> of constructor or I<never> if first is not
 defined. I<This is not C<busy_lock> option of CHI!> This is amount of time (to
 see L<CHI/"DURATION EXPRESSIONS">) until target lock expires. When a target is
 recomputed it is locked. If process is to be recomputing target and it will die
@@ -671,7 +671,7 @@ again. This option helps to avoid it.
 
 =item recomputed
 
-Optional. This is a recomputed callback (coderef). If target of this rule was
+B<Optional>. This is a recomputed callback (coderef). If target of this rule was
 recomputed this callback will be executed right away after recomputed value has
 been saved in cache. The callback will be executed as $coderef->( $rule,
 $target, $value ) where are:
@@ -696,6 +696,12 @@ $value->value
 
 For example you can use this callback for notifying of other sites that your
 target's value has been changed and is already in cache.
+
+=item value_expires
+
+B<Optional>.
+Sets an expire value for all future target markers are created by this rule in
+notation described in L<CHI/"DURATION-EXPRESSIONS">. The B<default> is 'never'.
 
 =back
 

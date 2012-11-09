@@ -112,7 +112,18 @@ CHI::Cascade::Rule - a rule class
 
 =head1 CONSTRUCTOR
 
-An instance of this object is created by L<CHI::Cascade> in L<CHI::Cascade/rule>.
+An instance of this object is created by L<CHI::Cascade> in L<CHI::Cascade/rule>
+as a following:
+
+    $rule = CHI::Cascade::Rule->new( %options )
+
+The list of options please see in L<CHI::Cascade/"rule( %options )"> method.
+
+=over
+
+=item
+
+=back
 
 =head1 DESCRIPTION
 
@@ -150,6 +161,13 @@ returns any data of any type what were passed to L<CHI::Cascade/params>
 =item cascade
 
 returns reference to L<CHI::Cascade> instance object for this rule.
+
+=item value_expires
+
+Sets an expire value of target marker in notation described in
+L<CHI/"DURATION-EXPRESSIONS">. The B<default> is 'never'. You can use this
+method inside L<CHI::Cascade/code> and L<CHI::Cascade/recomputed> your callbacks
+if you want to force recomputing of current target through minimum this time.
 
 =back
 
