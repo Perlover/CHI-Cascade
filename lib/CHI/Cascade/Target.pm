@@ -30,6 +30,7 @@ sub time {
 
 sub touch {
     $_[0]->{time} = Time::HiRes::time;
+    delete $_[0]->{finish_time};
 }
 
 sub actual_stamp {
@@ -38,6 +39,18 @@ sub actual_stamp {
 
 sub is_actual {
     ( $_[0]->{actual_stamp} || $_[0]->{time} || 0 ) + $_[1] >= Time::HiRes::time;
+}
+
+sub ttl {
+    my $self = shift;
+
+    if (@_) {
+	$self->{finish_time} = ( $_[1] || Time::HiRes::time ) + $_[0];
+	return $self;
+    }
+    else {
+	return $self->{finish_time} ? $self->{finish_time} - Time::HiRes::time : undef;
+    }
 }
 
 1;
