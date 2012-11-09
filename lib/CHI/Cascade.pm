@@ -479,8 +479,9 @@ CHI::Cascade - a cache dependencies (cache and like 'make' utility concept)
 =head1 DESCRIPTION
 
 This module is the attempt to use a benefits of caching and 'make' concept.
-If we have many an expensive tasks and want to cache it we can split its
-to small expsnsive tasks and to describe dependencies for cache items.
+If we have many an expensive tasks (a I<computations> or sometimes here used
+term as a I<recomputing>) and want to cache it we can split its to small
+expsnsive tasks and to describe dependencies for cache items.
 
 This module is experimental yet. I plan to improve it near time but some things
 already work. You can take a look for t/* tests as examples.
@@ -502,12 +503,12 @@ object for you. Please create instance of C<CHI> yourself.
 
 =item busy_lock
 
-B<Optional>. Default is I<never>. I<This is not C<busy_lock> option of CHI!> This
-is amount of time (to see L<CHI/"DURATION EXPRESSIONS">) until all target locks
-expire. When a target is recomputed it is locked. If process is to be
-recomputing target and it will die or OS will be hangs up we can dead locks and
-locked target will never recomputed again. This option helps to avoid it. You
-can set up a special busy_lock for rules too.
+B<Optional>. Default is I<never>. I<This is not C<busy_lock> option of CHI!>
+This is amount of time (to see L<CHI/"DURATION EXPRESSIONS">) until all target
+locks expire. When a target is to being computing it is locked. If process which
+is to be computing target and it will die or OS will be hangs up we can dead
+locks and locked target will never recomputed again. This option helps to avoid
+it. You can set up a special busy_lock for rules too.
 
 =item target_chi
 
@@ -611,7 +612,7 @@ dependencies before execution of dependent code.
 =item code
 
 B<Required>. The code reference for computing a value of this target (a
-recompute code). Will be executed if no value in cache for this target or
+I<computational code>). Will be executed if no value in cache for this target or
 any dependence or dependences of dependences and so on will be recomputed. Will
 be executed as C<< $code->( $rule, $target, $hashref_to_value_of_dependencies )
 >> I<(The API of running this code was changed since v0.10)>
@@ -656,8 +657,8 @@ last will not be executed (The C<run> will return C<undef>).
 
 =item params
 
-B<Optional>. You can pass in your code any additional parameters by this option. These
-parameters are accessed in your code through L<CHI::Cascade::Rule/params>
+B<Optional>. You can pass in your code any additional parameters by this option.
+These parameters are accessed in your code through L<CHI::Cascade::Rule/params>
 method of L<CHI::Cascade::Rule> instance object.
 
 =item busy_lock
@@ -665,16 +666,16 @@ method of L<CHI::Cascade::Rule> instance object.
 B<Optional>. Default is L</busy_lock> of constructor or I<never> if first is not
 defined. I<This is not C<busy_lock> option of CHI!> This is amount of time (to
 see L<CHI/"DURATION EXPRESSIONS">) until target lock expires. When a target is
-recomputed it is locked. If process is to be recomputing target and it will die
-or OS will be hangs up we can dead locks and locked target will never recomputed
-again. This option helps to avoid it.
+to being computed it is locked. If process which to be recomputing a target and
+it will die or OS will be hangs up we can dead locks and locked target will
+never recomputed again. This option helps to avoid it.
 
 =item recomputed
 
-B<Optional>. This is a recomputed callback (coderef). If target of this rule was
-recomputed this callback will be executed right away after recomputed value has
-been saved in cache. The callback will be executed as $coderef->( $rule,
-$target, $value ) where are:
+B<Optional>. This is a computational callback (coderef). If target of this rule
+was recomputed this callback will be executed right away after a recomputed
+value has been saved in cache. The callback will be executed as $coderef->(
+$rule, $target, $value ) where passed parameters are:
 
 =over
 
@@ -689,7 +690,7 @@ A current target as string
 
 =item $value
 
-The instance of L<CHI::Cascade::Value> class. You can use a recomputed value as
+The instance of L<CHI::Cascade::Value> class. You can use a computed value as
 $value->value
 
 =back
@@ -707,10 +708,10 @@ notation described in L<CHI/"DURATION EXPRESSIONS">. The B<default> is 'never'.
 
 =item run( $target, %options )
 
-This method makes a cascade computing if need and returns value (value is
+This method makes a cascade computation if need and returns value (value is
 cleaned value not L<CHI::Cascade::Value> object!) for this target If any
-dependence of this target of any dependencies of dependencies were recomputed
-this target will be recomputed too.
+dependence of this target of any dependencies of dependencies were
+(re)computed this target will be (re)computed too.
 
 =over
 
@@ -731,11 +732,12 @@ be a bit mask.
 
 =item defer
 
-If value will be a B<true> then recompute method will be terminated and will not
-recomputed (no L</code> execution). After L</run> you can test should be
-recomputed the target now or not by testing the bit C<CASCADE_DEFERRED>. If the
-B<CASCADE_DEFERRED> bit is set you can recall L</run> method again or re-execute
-target in other process for a non-blocking execution of current process.
+If value will be a B<true> then computational code will not be run if there is a
+need. After L</run> you can test status of returned value - it should be
+(re)computed or not by bit C<CASCADE_DEFERRED> in saved L</state> variable. If
+the B<CASCADE_DEFERRED> bit is set you can recall L</run> method again or
+re-execute target in other process for a non-blocking execution of current
+process.
 
 =item actual_term
 
