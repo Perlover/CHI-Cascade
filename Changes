@@ -17,6 +17,8 @@ NEXT (may be 0.26)
     *) Changed some tests for testing the 'actual_term' option
     +) Added stats  for operations 'run' & 'dependencies_lookup'
     +) Added the bit state CASCADE_ACTUAL_TERM
+    +) Added 'ttl' feature. No docs yet but there is tests for it
+    +) CHI::Cascade->rule now has the new option: value_expires
 
 0.25001
     *) Few fix - should improve tests
