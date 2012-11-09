@@ -701,7 +701,7 @@ target's value has been changed and is already in cache.
 
 B<Optional>.
 Sets an expire value for all future target markers are created by this rule in
-notation described in L<CHI/"DURATION-EXPRESSIONS">. The B<default> is 'never'.
+notation described in L<CHI/"DURATION EXPRESSIONS">. The B<default> is 'never'.
 
 =back
 
