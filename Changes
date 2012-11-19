@@ -22,6 +22,8 @@ NEXT (may be 0.26)
     *) Memcached tests are skipped by default. They use a starting of memcached
        and from cpanm they doesn't work. If you want to tests please use this
        method: perl Makefile.PL; FORCE_MEMCACHED_TESTS= make test && make install
+    +) Added stack for targets for circled dependencies die (now it prints stack)
+    *) Fixed bug with circled dependencies - now more accurate (no tests)
 
 0.25001
     *) Few fix - should improve tests

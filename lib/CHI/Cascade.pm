@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2518;
+our $VERSION = 0.2519;
 
 use Carp;
 
@@ -218,6 +218,8 @@ sub value_ref_if_recomputed {
 	$self->target_lock($rule);
     }
 
+    push @{ $self->{target_stack} }, $target;
+
     my $ret = eval {
 	my $dep_target;
 
@@ -251,19 +253,19 @@ sub value_ref_if_recomputed {
 	    $self->{ttl} = $ttl;
 	}
 	else {
-	    my ( $rule_ttl, $start_time ) = ( $rule->ttl );
+	    my ( $rule_ttl, $circle_hash, $start_time, $ret ) = ( $rule->ttl, $only_from_cache ? 'only_cache_chain' : 'chain' );
 
 	    foreach my $depend (@{ $rule->depends }) {
 		$dep_target = ref($depend) eq 'CODE' ? $depend->( $rule, @qr_params ) : $depend;
 
 		$dep_values{$dep_target}->[0] = $self->find($dep_target);
 
-		die qq{Found circle dependencies ( target '$target' <--> '$dep_target' ) - aborted!"}
-		  if ( exists $self->{ $only_from_cache ? 'only_cache_chain' : 'chain' }{$target}{$dep_target} );
+		die "Found circle dependencies (trace: " . join( '->', @{ $self->{target_stack} }, $dep_target ) . ") - aborted!"
+		  if ( exists $self->{ $circle_hash }{$target}{$dep_target} );
 
-		$self->{ $only_from_cache ? 'only_cache_chain' : 'chain' }{$target}{$dep_target} = 1;
+		$self->{ $circle_hash }{$target}{$dep_target} = 1;
 
-		$catcher->( sub {
+		$ret = $catcher->( sub {
 		    if (   ! $only_from_cache
 			&& ( $start_time = ( $self->{stats}{dependencies_lookup}++,
 			     ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->state & CASCADE_RECOMPUTED && Time::HiRes::time
@@ -280,7 +282,11 @@ sub value_ref_if_recomputed {
 			    return 0;
 			}
 		    }
-		} ) == 1 && last;
+		} );
+
+		delete $self->{ $circle_hash }{$target}{$dep_target};
+
+		last if $ret == 1;
 	    }
 	}
 
@@ -308,6 +314,8 @@ sub value_ref_if_recomputed {
 
 	return CHI::Cascade::Value->new( state => $ret_state );
     };
+
+    pop @{ $self->{target_stack} };
 
     my $e = $@;
 
@@ -362,6 +370,7 @@ sub _run {
 
     $self->{chain}            = {};
     $self->{only_cache_chain} = {};
+    $self->{target_stack}     = [];
 
     my $ret = eval {
 	$self->{orig_target} = $target;
