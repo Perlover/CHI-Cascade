@@ -17,13 +17,14 @@ NEXT (may be 0.26)
     *) Changed some tests for testing the 'actual_term' option
     +) Added stats  for operations 'run' & 'dependencies_lookup'
     +) Added the bit state CASCADE_ACTUAL_TERM
-    +) Added 'ttl' feature. No docs yet but there is tests for it
+    +) Added 'ttl' feature. Few some docs about this yet but there is tests for it
     +) CHI::Cascade->rule now has the new option: value_expires
     *) Memcached tests are skipped by default. They use a starting of memcached
        and from cpanm they doesn't work. If you want to tests please use this
        method: perl Makefile.PL; FORCE_MEMCACHED_TESTS= make test && make install
     +) Added stack for targets for circled dependencies die (now it prints stack)
     *) Fixed bug with circled dependencies - now more accurate (no tests)
+    +) Added new method 'stash' and same option in 'run' method of CHI::Cascade
 
 0.25001
     *) Few fix - should improve tests

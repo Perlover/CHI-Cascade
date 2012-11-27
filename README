@@ -205,9 +205,9 @@ METHODS
 
         params
             Optional. You can pass in your code any additional parameters by
-            this option. These parameters are accessed in your code through
-            "params" in CHI::Cascade::Rule method of CHI::Cascade::Rule
-            instance object.
+            this option. These parameters are accessed in your rule's code
+            through "params" in CHI::Cascade::Rule method of
+            CHI::Cascade::Rule instance object.
 
         busy_lock
             Optional. Default is "busy_lock" of constructor or *never* if
@@ -247,6 +247,12 @@ METHODS
             created by this rule in notation described in "DURATION
             EXPRESSIONS" in CHI. The default is 'never'.
 
+        ttl Optional. *(Soon will be more documented)* An arrayref for min &
+            max intervals of TTL. Example: "[ 60, 3600 ]" - where the
+            minimum ttl is seconds and the maximum is 3600 seconds. Targets
+            of this rule will be recomputed during from 60 to 3600 seconds
+            from touched time of any dependence this rule.
+
     run( $target, %options )
         This method makes a cascade computation if need and returns value
         (value is cleaned value not CHI::Cascade::Value object!) for this
@@ -257,7 +263,8 @@ METHODS
             Required. Plain text string of target.
 
         %options
-            Optional. A hash of options. Valid keys and values are:
+            Optional. And all options are optional too A hash of options.
+            Valid keys and values are:
 
             state
                 A scalarref of variable where will be stored a state of
@@ -287,6 +294,44 @@ METHODS
                 is missing in cache a recomputing can be run regardless of
                 this option.
 
+            ttl *(Soon will be more documented)* A scalarref for getting
+                current TTL for value of 'run' target. The TTL is "time to
+                live" as TTL in DNS. If any rule in a path of following to
+                dependencies has ttl parameter then the cascade will do
+                there:
+
+                1.  will look up a time of this retouched dependence;
+
+                2.  if rule's target marker already has a upper time and
+                    this time in future the target will be recomputed in
+                    this time in future and before this moment you will get
+                    a old data from cache for 'run' target. If this time is
+                    there and has elapsed cascade will use a standard
+                    algorithm.
+
+                3.  will look up the rule's ttl parameter (min & max ttl
+                    values) and will generate upper time of computation of
+                    this rule's target and will return from "run" method old
+                    data of 'run' target. Next "run"s executions will return
+                    old values of any targets where this TTL-marked target
+                    is as dependence.
+
+                4.  In any case if old value misses in cache the cascade
+                    will recompute codes.
+
+                This feature was made for *reset* situation. For example if
+                we have 'reset' rule and all rules depend from this one rule
+                the better way will be to have 'ttl' parameter in every rule
+                except 'reset' rule. So if rule 'reset' will be retouched
+                (or deleted) other targets will be recomputed during time
+                from 'min' and 'max' intervals from 'reset' touched time. It
+                reduce a server's load. Later i will add examples for this
+                and will document this feature more details.
+
+            stash
+                A *hashref* to stash - temporary data container between
+                rule's codes. Please see "stash ()" method for details.
+
     touch( $target )
         This method refreshes the time of this target. Here is analogy with
         touch utility of Unix and behaviour as make(1) after it. After
@@ -299,6 +344,22 @@ METHODS
         exists and once when cascade will need target value it will be
         recomputed. In a during recomputing of course cascade will return an
         old value if one exists in cache.
+
+    stash ()
+        It returns *hashref* to a stash. A stash is hash for temporary data
+        between rule's codes. It can be used only from inside "run".
+        Example:
+
+            $cascade->run( 'target', stash => { key1 => value1 } )
+
+        and into rule's code:
+
+            $rule->cascade->stash->{key1}
+
+        If a "run" method didn't get stash hashref the default stash will be
+        as empty hash. You can pass a data between rule's codes but it's
+        recommended only in special cases. For example when run's target
+        cannot get a full data from its target's name.
 
 STATUS
     This module is experimental and not finished for new features ;-) Please

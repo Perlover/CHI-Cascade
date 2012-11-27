@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2519;
+our $VERSION = 0.2520;
 
 use Carp;
 
@@ -331,6 +331,8 @@ sub value_ref_if_recomputed {
     return $ret || CHI::Cascade::Value->new;
 }
 
+sub stash { exists $_[0]->{stash} && $_[0]->{stash} || die "The stash method from outside run method!" }
+
 sub run {
     my ( $self, $target, %opts ) = @_;
 
@@ -340,6 +342,8 @@ sub run {
     $self->{ttl}         = undef;
     $opts{actual_term} ||= $self->find($target)->{actual_term};
     $self->{stats}{run}++;
+
+    $self->{stash} = $opts{stash} && ref $opts{stash} eq 'HASH' && $opts{stash} || {};
 
     $view_dependencies = ! $self->target_is_actual( $target, $opts{actual_term} )
       if ( $opts{actual_term} );
@@ -358,6 +362,8 @@ sub run {
 
     ${ $opts{state} } = $res->state
       if ( $opts{state} );
+
+    delete $self->{stash};
 
     $res->value;
 }
@@ -738,7 +744,7 @@ B<Required.> Plain text string of target.
 
 =item %options
 
-B<Optional.> A hash of options. Valid keys and values are:
+B<Optional.> And B<all options> are B<optional> too A hash of options. Valid keys and values are:
 
 =over
 
@@ -809,6 +815,11 @@ retouched (or deleted) other targets will be recomputed during time from 'min'
 and 'max' intervals from 'reset' touched time. It reduce a server's load. Later
 i will add examples for this and will document this feature more details.
 
+=item stash
+
+A I<hashref> to stash - temporary data container between rule's codes. Please
+see L</"stash ()"> method for details.
+
 =back
 
 =back
@@ -826,6 +837,22 @@ It's like a removing of target file in make. You can force to recompute target
 by this method. It will remove target marker if one exists and once when cascade
 will need target value it will be recomputed. In a during recomputing of course
 cascade will return an old value if one exists in cache.
+
+=item stash ()
+
+It returns I<hashref> to a stash. A stash is hash for temporary data between
+rule's codes. It can be used only from inside L</run>. Example:
+
+    $cascade->run( 'target', stash => { key1 => value1 } )
+
+and into rule's code:
+
+    $rule->cascade->stash->{key1}
+
+If a L</run> method didn't get stash hashref the default stash will be as empty
+hash. You can pass a data between rule's codes but it's recommended only in
+special cases. For example when run's target cannot get a full data from its
+target's name.
 
 =back
 
