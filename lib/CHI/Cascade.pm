@@ -667,8 +667,8 @@ last will not be executed (The C<run> will return C<undef>).
 =item params
 
 B<Optional>. You can pass in your code any additional parameters by this option.
-These parameters are accessed in your code through L<CHI::Cascade::Rule/params>
-method of L<CHI::Cascade::Rule> instance object.
+These parameters are accessed in your rule's code through
+L<CHI::Cascade::Rule/params> method of L<CHI::Cascade::Rule> instance object.
 
 =item busy_lock
 
@@ -712,6 +712,14 @@ target's value has been changed and is already in cache.
 B<Optional>.
 Sets an expire value for all future target markers are created by this rule in
 notation described in L<CHI/"DURATION EXPRESSIONS">. The B<default> is 'never'.
+
+=item ttl
+
+B<Optional>. I<(Soon will be more documented)>
+An arrayref for min & max intervals of TTL. Example: C<[ 60, 3600 ]> - where the
+minimum ttl is seconds and the maximum is 3600 seconds. Targets of this rule
+will be recomputed during from 60 to 3600 seconds from touched time of any
+dependence this rule.
 
 =back
 
@@ -760,6 +768,46 @@ only every 2.5 seconds. So recomputing in this example can be recomputed only
 one time in every 2.5 seconds (even if one from dependencies will be updated).
 But if value of $target is missing in cache a recomputing can be
 run regardless of this option.
+
+=item ttl
+
+I<(Soon will be more documented)> A B<scalarref> for getting current TTL for
+value of 'run' target. The TTL is "time to live" as TTL in DNS. If any rule in
+a path of following to dependencies has ttl parameter then the cascade will do
+there:
+
+=over
+
+=item 1.
+
+will look up a time of this retouched dependence;
+
+=item 2.
+
+if rule's target marker already has a upper time and this time in future
+the target will be recomputed in this time in future and before this moment you
+will get a old data from cache for 'run' target. If this time is there and has
+elapsed cascade will use a standard algorithm.
+
+=item 3.
+
+will look up the rule's ttl parameter (min & max ttl values) and will generate
+upper time of computation of this rule's target and will return from L</run>
+method old data of 'run' target. Next L</run>s executions will return old values
+of any targets where this TTL-marked target is as dependence.
+
+=item 4.
+
+In any case if old value misses in cache the cascade will recompute codes.
+
+=back
+
+This feature was made for I<reset> situation. For example if we have 'reset'
+rule and all rules depend from this one rule the better way will be to have
+'ttl' parameter in every rule except 'reset' rule. So if rule 'reset' will be
+retouched (or deleted) other targets will be recomputed during time from 'min'
+and 'max' intervals from 'reset' touched time. It reduce a server's load. Later
+i will add examples for this and will document this feature more details.
 
 =back
 
