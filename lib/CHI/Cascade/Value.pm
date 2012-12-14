@@ -180,13 +180,33 @@ returns C<true> if value was set by L</value> method or C<false> else.
 
 A getting or setting of state bits of value object.
 
+=item state_as_str
+
+    my $value = $cascade->run( 'my_target', state => \$state );
+    my $str = CHI::Cascade::Value->state_as_str( $state );
+
+Returns a string presentation of state bits (see below L</"STATE BITS">).
+Strings of bits are ordered by alphabetical before concatenation. Here some
+examples:
+
+    # It means you get actual value and this was recomputed right now
+    CASCADE_ACTUAL_VALUE | CASCADE_RECOMPUTED
+
+    # It happens when returned value of CHI::Cascade::run is undef and here is reason why:
+    # value right now is being computed in other process and no old value in cache
+    CASCADE_COMPUTING | CASCADE_NO_CACHE
+
+This method is useful for debugging or logging processes.
+
 =back
 
 =head1 STATE BITS
 
 Since version 0.26 the CHI::Cascade introduces the concept of state bits. An
-every value object (even which has not valid value) has a history described by
-state bits. To use this bit mask we can know how this value was gotten.
+every value object (even which has not valid value) has a history is described
+by these state bits. To use this bit mask we can know how this value was gotten.
+These bits are returned by L<CHI::Cascade/run> in L<CHI::Cascade/state>
+variable.
 
 =over
 
@@ -232,9 +252,20 @@ die CHI::Cascade::Value->new(undef) >>)
 
 =item CASCADE_ACTUAL_TERM
 
-The method L<CHI::Cascade/run> was run with L<actual_term|CHI::Cascade/actual_term> option
-and C<actual term> is actual for this value (a value can be old - the
-CASCADE_ACTUAL_VALUE bit will not be set).
+The method L<CHI::Cascade/run> was run with
+L<actual_term|CHI::Cascade/actual_term> option and C<actual term> is actual for
+this value (a value can be old - the CASCADE_ACTUAL_VALUE bit will not be set).
+
+=item CASCADE_TTL_INVOLVED
+
+A returned value is not actual value and already is old because some dependence
+is newly than value which depends from this. But you describes an option C<ttl>
+in L<CHI::Cascade/rule>. If you had passed the option C<ttl> like C<\$ttl> to
+L<CHI::Cascade/run> method there in $ttl will be fractal number of "time to
+live" - how many seconds are left before the computation (of course, if you will
+call C<run> again for that target). This feature is useful for global reset
+mechanism (one I<reset> target as global dependence and other rules from its
+have a C<ttl> parameter in I<rules>).
 
 =back
 

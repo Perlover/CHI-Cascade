@@ -1,30 +1,33 @@
-NEXT (may be 0.26)
+0.26 (STABLE)
     *) New conception of non-blocking run method - deferring
     *) The test 04_memcached_multi.t some fails in FreeBSD. May be this is
        because 'sleep' works not as expected. I changed the 'sleep' to
        'select($,$,$,$)'. May be it will improve this test at FreeBSD...
     +) Added CHI::Cascade::Rule::value_expires method for changing by recompute
-       code the expiration time of values & target markers (no docs yet)
+       code the expiration time of values & target markers
     +) Added test for value_expires - test_05.pm by 08_fast_mmap.t
     *) Fixed bugs - in tests *_fast_mmap.t if was ^C signal - files of FastMmap
        driver were not deleted
-    *) The new method CHI::Cascade::Value->state (no docs yet)
-    +) Added method CHI::Cascade::Value::state_as_str (no docs yet)
+    *) The new method CHI::Cascade::Value->state
+    +) Added method CHI::Cascade::Value::state_as_str
     *) The test '07_fast_mmap.t' tests now deferring & states of values
     *) Fix few bug with target locking
     *) Fixed unproductive code piece of value with expiring
     *) Fixed unproductive code with target locking
     *) Changed some tests for testing the 'actual_term' option
-    +) Added stats  for operations 'run' & 'dependencies_lookup'
-    +) Added the bit state CASCADE_ACTUAL_TERM
-    +) Added 'ttl' feature. Few some docs about this yet but there is tests for it
-    +) CHI::Cascade->rule now has the new option: value_expires
+    +) Added stats for operations 'run' & 'dependencies_lookup'
+    +) Added bits of state CASCADE_ACTUAL_TERM & CASCADE_TTL_INVOLVED
+    +) Added 'ttl' feature.
+    +) CHI::Cascade->rule has now some new options: value_expires & ttl
+    +) CHI::Cascade->run has now some new options: ttl & stash
     *) Memcached tests are skipped by default. They use a starting of memcached
        and from cpanm they doesn't work. If you want to tests please use this
-       method: perl Makefile.PL; FORCE_MEMCACHED_TESTS= make test && make install
-    +) Added stack for targets for circled dependencies die (now it prints stack)
+       method:
+	$ perl Makefile.PL
+	$ FORCE_MEMCACHED_TESTS=1 make test && make install
+    +) Added a stack info for targets for circled dependencies die (now it prints stack)
     *) Fixed bug with circled dependencies - now more accurate (no tests)
-    +) Added new method 'stash' and same option in 'run' method of CHI::Cascade
+    +) Added new method 'stash' for getting a stash passed through 'run' method
 
 0.25001
     *) Few fix - should improve tests

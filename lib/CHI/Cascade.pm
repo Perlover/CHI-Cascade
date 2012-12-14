@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.2520;
+our $VERSION = 0.26;
 
 use Carp;
 
@@ -721,11 +721,12 @@ notation described in L<CHI/"DURATION EXPRESSIONS">. The B<default> is 'never'.
 
 =item ttl
 
-B<Optional>. I<(Soon will be more documented)>
+B<Optional>.
 An arrayref for min & max intervals of TTL. Example: C<[ 60, 3600 ]> - where the
 minimum ttl is seconds and the maximum is 3600 seconds. Targets of this rule
-will be recomputed during from 60 to 3600 seconds from touched time of any
-dependence this rule.
+will be recomputed during from 60 up to 3600 seconds from touched time of any
+dependence this rule. Please read L<CHI::Cascade::Value/CASCADE_TTL_INVOLVED>
+too.
 
 =back
 
@@ -777,10 +778,9 @@ run regardless of this option.
 
 =item ttl
 
-I<(Soon will be more documented)> A B<scalarref> for getting current TTL for
-value of 'run' target. The TTL is "time to live" as TTL in DNS. If any rule in
-a path of following to dependencies has ttl parameter then the cascade will do
-there:
+A B<scalarref> for getting current TTL for value of 'run' target. The TTL is
+"time to live" as TTL in DNS. If any rule in a path of following to dependencies
+has ttl parameter then the cascade will do there:
 
 =over
 
@@ -813,7 +813,8 @@ rule and all rules depend from this one rule the better way will be to have
 'ttl' parameter in every rule except 'reset' rule. So if rule 'reset' will be
 retouched (or deleted) other targets will be recomputed during time from 'min'
 and 'max' intervals from 'reset' touched time. It reduce a server's load. Later
-i will add examples for this and will document this feature more details.
+i will add examples for this and will document this feature more details. Please
+read L<CHI::Cascade::Value/CASCADE_TTL_INVOLVED> too.
 
 =item stash
 

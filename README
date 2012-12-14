@@ -247,11 +247,12 @@ METHODS
             created by this rule in notation described in "DURATION
             EXPRESSIONS" in CHI. The default is 'never'.
 
-        ttl Optional. *(Soon will be more documented)* An arrayref for min &
-            max intervals of TTL. Example: "[ 60, 3600 ]" - where the
-            minimum ttl is seconds and the maximum is 3600 seconds. Targets
-            of this rule will be recomputed during from 60 to 3600 seconds
-            from touched time of any dependence this rule.
+        ttl Optional. An arrayref for min & max intervals of TTL. Example:
+            "[ 60, 3600 ]" - where the minimum ttl is seconds and the
+            maximum is 3600 seconds. Targets of this rule will be recomputed
+            during from 60 up to 3600 seconds from touched time of any
+            dependence this rule. Please read "CASCADE_TTL_INVOLVED" in
+            CHI::Cascade::Value too.
 
     run( $target, %options )
         This method makes a cascade computation if need and returns value
@@ -294,11 +295,10 @@ METHODS
                 is missing in cache a recomputing can be run regardless of
                 this option.
 
-            ttl *(Soon will be more documented)* A scalarref for getting
-                current TTL for value of 'run' target. The TTL is "time to
-                live" as TTL in DNS. If any rule in a path of following to
-                dependencies has ttl parameter then the cascade will do
-                there:
+            ttl A scalarref for getting current TTL for value of 'run'
+                target. The TTL is "time to live" as TTL in DNS. If any rule
+                in a path of following to dependencies has ttl parameter
+                then the cascade will do there:
 
                 1.  will look up a time of this retouched dependence;
 
@@ -326,7 +326,8 @@ METHODS
                 (or deleted) other targets will be recomputed during time
                 from 'min' and 'max' intervals from 'reset' touched time. It
                 reduce a server's load. Later i will add examples for this
-                and will document this feature more details.
+                and will document this feature more details. Please read
+                "CASCADE_TTL_INVOLVED" in CHI::Cascade::Value too.
 
             stash
                 A *hashref* to stash - temporary data container between
