@@ -386,7 +386,7 @@ sub _run {
 
     my $terminated;
 
-    if ($terminated = $@) {
+    if ( $terminated = $@ ) {
 	$ret = $@;
 
 	die $ret

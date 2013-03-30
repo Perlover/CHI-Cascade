@@ -240,15 +240,30 @@ L<CHI::Cascade/code> in your process)
 
 =item CASCADE_CODE_EXCEPTION
 
-A code of target or code of any dependencies has raised an exception. A value of
-target can be B<undef> (if L<CHI::Cascade/code> or any code of dependencies
-threw exception as not L<CHI::Cascade::Value> object or cache doesn't have any
-value of target, for example C<< die "some error" >>), B<old value from cache>
-(if L<CHI::Cascade/code> or any code of dependencies threw exception as
-L<CHI::Cascade::Value> object without value and cache has any value for target,
-for example C<< die CHI::Cascade::Value->new >>) or B<value was thrown by
-exception> (example: C<< die CHI::Cascade::Value->new(123) >> and even same: C<<
-die CHI::Cascade::Value->new(undef) >>)
+This state bit occurs only if exception was thrown from code or any dependencies
+and it has the type L<CHI::Cascade::Value> (the expression C<<
+$@->isa('CHI::Cascade::Value') >> is C<true>). If there to be thrown an other
+type expression it will be rethrown from L<CHI::Cascade/run>. A value of
+target returned by L<CHI::Cascade/run> can be:
+
+=over
+
+=item undef
+
+A cache doesn't have any value of target
+
+=item old value from cache
+
+If L<CHI::Cascade/code> if a code or any code of dependencies threw exception as
+L<CHI::Cascade::Value> object without value and a cache has any value for target
+(i.e. C<< die CHI::Cascade::Value->new >>)
+
+=item value was thrown by exception
+
+If value was thrown by C<< die CHI::Cascade::Value->new->value(123) >> and even same: C<< die
+CHI::Cascade::Value->new->value(undef) >>) for example.
+
+=back
 
 =item CASCADE_ACTUAL_TERM
 
