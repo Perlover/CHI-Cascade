@@ -3,7 +3,10 @@
 Notes.txt
 *.bak
 /Makefile
+/Makefile.old
 *.tar.gz
 /CHI-Cascade-*/
 /MYMETA.*
 /META.yml
+/blib/
+pm_to_blib

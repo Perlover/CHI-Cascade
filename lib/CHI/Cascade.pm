@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.26;
+our $VERSION = 0.261;
 
 use Carp;
 
@@ -98,7 +98,7 @@ sub target_lock {
     $trg_obj = CHI::Cascade::Target->new unless ( ( $trg_obj = $self->{target_chi}->get("t:$target") ) );
 
     $trg_obj->lock;
-    $self->{target_chi}->set( "t:$target", $trg_obj, $rule->{busy_lock} || $self->{busy_lock} || 'never' );
+    $self->{target_chi}->set( "t:$target", $trg_obj, $rule->target_expires( $trg_obj ) );
 
     $self->{target_locks}{$target} = 1;
 }
@@ -114,7 +114,7 @@ sub target_unlock {
 	1 && $trg_obj->touch, $self->{run_opts}{actual_term} && $self->{orig_target} eq $target && $trg_obj->actual_stamp
 	  if ( $value && $value->state & CASCADE_RECOMPUTED );
 
-	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->value_expires );
+	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->target_expires( $trg_obj ) );
     }
 
     delete $self->{target_locks}{$target};
@@ -127,7 +127,7 @@ sub target_actual_stamp {
 
     if ( $value && $value->state & CASCADE_ACTUAL_VALUE && ( my $trg_obj = $self->{target_chi}->get( "t:$target" ) ) ) {
 	$trg_obj->actual_stamp;
-	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->value_expires );
+	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->target_expires( $trg_obj ) );
     }
 }
 
@@ -138,7 +138,7 @@ sub target_start_ttl {
 
     if ( my $trg_obj = $self->{target_chi}->get( "t:$target" ) ) {
 	$trg_obj->ttl( $rule->ttl, $start_time );
-	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->value_expires );
+	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->target_expires( $trg_obj ) );
     }
 }
 
@@ -149,11 +149,11 @@ sub target_remove {
 }
 
 sub touch {
-    my ($self, $target) = @_;
+    my ( $self, $target ) = @_;
 
     if ( my $trg_obj = $self->{target_chi}->get("t:$target") ) {
 	$trg_obj->touch;
-	$self->{target_chi}->set( "t:$target", $trg_obj, 'never' );
+	$self->{target_chi}->set( "t:$target", $trg_obj, $self->find( $target )->target_expires( $trg_obj ) );
     }
 }
 

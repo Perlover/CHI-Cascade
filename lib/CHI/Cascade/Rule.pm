@@ -60,6 +60,16 @@ sub value_expires {
     $self->{value_expires} || 'never';
 }
 
+sub target_expires {
+    my ( $self, $trg_obj ) = @_;
+
+    $trg_obj->locked
+	?
+	$self->{busy_lock} || $self->{cascade}{busy_lock} || 'never'
+	:
+	$self->value_expires;
+}
+
 sub ttl {
     my $self = shift;
 
