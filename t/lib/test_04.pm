@@ -48,7 +48,7 @@ sub test_cascade {
     my $time2 = time;
 
     ok( $cascade->{stats}{recompute} == 0 );
-    ok( $time2 - $time1 < 0.1 );
+    cmp_ok( $time2 - $time1, '<', 0.1 );
     ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_DEFERRED | CASCADE_NO_CACHE" );
 
     my $res;

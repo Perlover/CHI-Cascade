@@ -11,8 +11,6 @@ use CHI::Cascade;
 plan skip_all => 'Not installed CHI::Driver::FastMmap'
   unless eval "use CHI::Driver::FastMmap; 1";
 
-plan tests => 24;
-
 $SIG{__DIE__} = sub {
     `{ rm -rf t/fast_mmap; } >/dev/null 2>&1`;
     $SIG{__DIE__} = 'IGNORE';
@@ -30,5 +28,7 @@ my $cascade = CHI::Cascade->new(
 );
 
 test_cascade($cascade);
+
+done_testing;
 
 $SIG{__DIE__} eq 'IGNORE' || $SIG{__DIE__}->();
