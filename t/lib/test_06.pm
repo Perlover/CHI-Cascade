@@ -14,8 +14,6 @@ my $recomputed;
 sub test_cascade {
     my $cascade = shift;
 
-    plan tests => 32;
-
     $cascade->rule(
 	target		=> 'reset',
 	code		=> sub { 1 }
@@ -73,7 +71,9 @@ sub test_cascade {
     ok( $state & CASCADE_TTL_INVOLVED );
     ok( not $state & CASCADE_RECOMPUTED );
     ok( defined $ttl && $ttl > 0 );
-    ok( $prevTTL - $ttl > 0.1 && $prevTTL - $ttl < 0.3 );
+
+    cmp_ok( $prevTTL - $ttl, '>', 0.1 );
+    cmp_ok( $prevTTL - $ttl, '<', 0.3 );
 
     select( undef, undef, undef, 1.9 );
 
@@ -91,6 +91,8 @@ sub test_cascade {
     ok( $cascade->{stats}{recompute} == 7 );
     ok( not $state & CASCADE_TTL_INVOLVED );
     ok( ( $state & ( CASCADE_ACTUAL_VALUE | CASCADE_FROM_CACHE ) ) == ( CASCADE_ACTUAL_VALUE | CASCADE_FROM_CACHE ) );
+
+    done_testing;
 }
 
 1;
