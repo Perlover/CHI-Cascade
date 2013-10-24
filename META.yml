@@ -29,4 +29,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/Perlover/CHI-Cascade.git
-version: 0.27
+version: 0.28

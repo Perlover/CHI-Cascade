@@ -8,3 +8,5 @@ Makefile\.old$
 \.bak$
 ^CHI-Cascade-.*?/
 \.tar\.gz$
+MYMETA\.json
+MYMETA\.yml

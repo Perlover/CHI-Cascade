@@ -1,5 +1,9 @@
 Revision history for perl module CHI::Cascade
 
+0.28 2013-10-24
+    - Removed MYMETA.* files from MANIFEST and added to exclude lists (.gitignore & MANIFEST.SKIP)
+      ( http://weblog.bulknews.net/post/44251476706/stop-shipping-mymeta-to-cpan )
+
 0.27 2013-09-01 Stable release - i use it in production ;-)
     - Only fix Changes - reformated to CPAN::Changes::Spec
 
