@@ -67,7 +67,7 @@ sub target_expires {
 	?
 	$self->{busy_lock} || $self->{cascade}{busy_lock} || 'never'
 	:
-	$self->value_expires;
+	$trg_obj->expires // $trg_obj->expires( $self->value_expires );
 }
 
 sub ttl {

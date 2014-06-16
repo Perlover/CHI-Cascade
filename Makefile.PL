@@ -15,6 +15,7 @@ requires 'CHI';
 requires 'Time::HiRes';
 requires 'Scalar::Util';
 requires 'parent';
+requires 'Time::Duration::Parse';
 
 build_requires 'Test::More';
 build_requires 'Test::Base';
