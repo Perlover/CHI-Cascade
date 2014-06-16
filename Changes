@@ -1,6 +1,6 @@
 Revision history for perl module CHI::Cascade
 
-0.281 2013-06-16
+0.281 2014-06-16
     - some corrected t/test_04.pm
       ( test fail report here - http://www.cpantesters.org/cpan/report/8b744d08-764a-11e3-8d2f-66cfdfbfc7aa )
     - fix bug with 'valid_expires', the test was written for it
