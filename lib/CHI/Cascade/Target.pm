@@ -73,7 +73,7 @@ sub expires {
 		(
 		    $self->{expires_finish_time} > Time::HiRes::time
 		    ?
-			int( $self->{expires_finish_time} - Time::HiRes::time + 0.5 ) || 1
+			int( $self->{expires_finish_time} - Time::HiRes::time + 0.5 ) || 'now'
 		    :
 			'now'
 		)

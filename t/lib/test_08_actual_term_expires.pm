@@ -39,7 +39,7 @@ sub test_cascade {
 
     $cascade->rule(
 	target		=> 'actual_test',
-	actual_term	=> 5.0,
+	actual_term	=> 2.0,
 	value_expires	=> '2s',
 	depends		=> 'one_page_0',
 	code		=> sub {
@@ -58,7 +58,7 @@ sub test_cascade {
     is_deeply( $cascade->run('one_page_0'), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache');
     cmp_ok( $cascade->{stats}{recompute}, '==', 3, 'recompute stats - 4');
 
-    sleep 1;
+    select( undef, undef, undef, 1.0 );
 
     # To force recalculate dependencied
     $cascade->touch('big_array');
@@ -80,12 +80,12 @@ sub test_cascade {
     is_deeply( $cascade->run( 'actual_test', state => \$state ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], 'actual_test');
     ok( $cascade->{stats}{recompute} == 6 );
 
-    $cascade->touch('big_array');
-
     my $dependencies_lookup = $cascade->{stats}{dependencies_lookup};
 
     is_deeply( $cascade->run( 'one_page_0', state => \$state, actual_term => 2.0 ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache after touching');
     ok( $state & CASCADE_ACTUAL_TERM );
+
+    select( undef, undef, undef, 1.0 );
 
     is_deeply( $cascade->run( 'actual_test', state => \$state ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], 'actual_test');
     ok( $state & CASCADE_ACTUAL_TERM );
@@ -96,20 +96,12 @@ sub test_cascade {
 
     ok( $cascade->{stats}{dependencies_lookup} == $dependencies_lookup );
 
-    select( undef, undef, undef, 1.2 );
+    select( undef, undef, undef, 1.0 );
 
-    $dependencies_lookup = $cascade->{stats}{dependencies_lookup};
-
-    is_deeply( $cascade->run( 'actual_test', state => \$state ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], 'actual_test');
-    ok( $cascade->{stats}{dependencies_lookup} == $dependencies_lookup );
-    ok( $cascade->{stats}{recompute} == 6 );
-
-    select( undef, undef, undef, 2.2 );
-
-    # Here the 'value_expires' happened before 'actual_term'
+    # Here the 'value_expires' happened
     is_deeply( $cascade->run( 'actual_test', state => \$state ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], 'actual_test');
     ok( $cascade->{stats}{dependencies_lookup} > $dependencies_lookup );
-    ok( $cascade->{stats}{recompute} == 8 );	# Here were recomputed 'actual_test' & 'one_page_0'
+    ok( $cascade->{stats}{recompute} == 7 );	# Here were recomputed 'actual_test' & 'one_page_0'
 
     # Here target's value has expired before the actual term finished
     ok( not $state & CASCADE_ACTUAL_TERM );
@@ -119,7 +111,7 @@ sub test_cascade {
 
     is_deeply( $cascade->run( 'actual_test', state => \$state ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], 'actual_test');
     ok( $state & CASCADE_ACTUAL_TERM );
-    ok( $cascade->{stats}{recompute} == 8 );
+    ok( $cascade->{stats}{recompute} == 7 );
 
     done_testing;
 }
