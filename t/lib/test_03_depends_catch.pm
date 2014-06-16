@@ -1,4 +1,4 @@
-package test_03;
+package test_03_depends_catch;
 
 use strict;
 use Test::More;

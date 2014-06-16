@@ -1,4 +1,4 @@
-package test_06;
+package test_06_ttl;
 
 use strict;
 use Test::More;
@@ -64,7 +64,7 @@ sub test_cascade {
 
     select( undef, undef, undef, 0.2 );
 
-    # Not ttl will be reduced by ~ 0.2 seconds
+    # Now ttl will be reduced by ~ 0.2 seconds
     ok( defined( $res = $cascade->run( 'one_page_0', state => \$state, ttl => \$ttl ) ) );
     is_deeply( $res, [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ] );
     ok( $cascade->{stats}{recompute} == 5 );

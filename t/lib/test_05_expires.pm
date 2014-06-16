@@ -1,4 +1,4 @@
-package test_05;
+package test_05_expires;
 
 use strict;
 use Test::More;

@@ -1,4 +1,4 @@
-package test_01;
+package test_01_actual_term;
 
 use strict;
 use Test::More;

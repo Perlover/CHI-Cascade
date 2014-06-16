@@ -1,7 +1,7 @@
 use strict;
 
 use lib 't/lib';
-use test_01;
+use test_01_actual_term;
 
 use Test::More;
 

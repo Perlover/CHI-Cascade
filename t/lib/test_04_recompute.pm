@@ -1,4 +1,4 @@
-package test_04;
+package test_04_recompute;
 
 use strict;
 use Test::More;

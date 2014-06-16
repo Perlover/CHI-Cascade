@@ -1,7 +1,7 @@
 use strict;
 
 use lib 't/lib';
-use test_07;
+use test_06_ttl;
 
 use Test::More;
 

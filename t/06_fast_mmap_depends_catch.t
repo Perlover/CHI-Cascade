@@ -1,7 +1,7 @@
 use strict;
 
 use lib 't/lib';
-use test_03;
+use test_03_depends_catch;
 
 use Test::More;
 

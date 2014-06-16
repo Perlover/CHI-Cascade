@@ -1,4 +1,4 @@
-package test_02;
+package test_02_touch;
 
 use strict;
 use Test::More;

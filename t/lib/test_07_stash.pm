@@ -1,4 +1,4 @@
-package test_07;
+package test_07_stash;
 
 use strict;
 use Test::More;
