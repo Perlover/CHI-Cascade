@@ -40,7 +40,7 @@ sub test_cascade {
     $cascade->rule(
 	target		=> 'actual_test',
 	actual_term	=> 2.0,
-	value_expires	=> '2s',
+	value_expires	=> '3s',
 	depends		=> 'one_page_0',
 	code		=> sub {
 	    $_[2]->{one_page_0}
@@ -85,20 +85,21 @@ sub test_cascade {
     is_deeply( $cascade->run( 'one_page_0', state => \$state, actual_term => 2.0 ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache after touching');
     ok( $state & CASCADE_ACTUAL_TERM );
 
-    select( undef, undef, undef, 1.0 );
+    select( undef, undef, undef, 2.1 );
 
     is_deeply( $cascade->run( 'actual_test', state => \$state ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], 'actual_test');
-    ok( $state & CASCADE_ACTUAL_TERM );
+    ok( not $state & CASCADE_ACTUAL_TERM );
 
     is_deeply( $cascade->run('one_page_1', state => \$state, actual_term => 2.0), [ 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 ] );
     ok( $cascade->{stats}{recompute} == 6 );
-    ok( $state & CASCADE_ACTUAL_TERM );
+    ok( not $state & CASCADE_ACTUAL_TERM );
 
-    ok( $cascade->{stats}{dependencies_lookup} == $dependencies_lookup );
+    ok( $cascade->{stats}{dependencies_lookup} > $dependencies_lookup );
 
     select( undef, undef, undef, 1.0 );
 
     # Here the 'value_expires' happened
+    # Before there was bug - the expires has been updated by actual_cash checking
     is_deeply( $cascade->run( 'actual_test', state => \$state ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], 'actual_test');
     ok( $cascade->{stats}{dependencies_lookup} > $dependencies_lookup );
     ok( $cascade->{stats}{recompute} == 7 );	# Here were recomputed 'actual_test' & 'one_page_0'
