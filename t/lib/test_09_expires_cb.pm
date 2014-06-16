@@ -1,4 +1,4 @@
-package test_05_expires;
+package test_09_expires_cb;
 
 use strict;
 use Test::More;
@@ -15,8 +15,8 @@ sub test_cascade {
 
     $cascade->rule(
 	target		=> 'big_array',
+	value_expires	=> sub { '2s' },
 	code		=> sub {
-	    $_[0]->value_expires( '2s' );
 	    return [ 1 .. 1000 ];
 	}
     );

@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.28;
+our $VERSION = 0.281;
 
 use Carp;
 
@@ -716,8 +716,10 @@ target's value has been changed and is already in cache.
 =item value_expires
 
 B<Optional>.
-Sets an expire value for all future target markers are created by this rule in
-notation described in L<CHI/"DURATION EXPRESSIONS">. The B<default> is 'never'.
+Sets an L<CHI>'s cache expire value for all future target markers are created by
+this rule in notation described in L<CHI/"DURATION EXPRESSIONS">. The B<default>
+is 'never'. It can be B<coderef> or B<string scalar> format as L<CHI/"DURATION
+EXPRESSIONS">. A B<coderef> should return value in same format.
 
 =item ttl
 

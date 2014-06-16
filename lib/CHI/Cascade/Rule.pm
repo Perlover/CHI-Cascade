@@ -57,7 +57,7 @@ sub value_expires {
 	$self->{value_expires} = $_[0];
 	return $self;
     }
-    $self->{value_expires} || 'never';
+    ( ref $self->{value_expires} eq 'CODE' ? $self->{value_expires}->( $self ) : $self->{value_expires} ) // 'never';
 }
 
 sub target_expires {
@@ -174,10 +174,13 @@ returns reference to L<CHI::Cascade> instance object for this rule.
 
 =item value_expires
 
-Sets an expire value of target marker in notation described in
-L<CHI/"DURATION EXPRESSIONS">. The B<default> is 'never'. You can use this
-method inside L<CHI::Cascade/code> and L<CHI::Cascade/recomputed> your callbacks
-if you want to force recomputing of current target through minimum this time.
+Sets an L<CHI>'s cache expire value for the target marker of this value to be
+created by this rule in notation described in L<CHI/"DURATION EXPRESSIONS">. The
+B<default> is 'never'. It can be B<coderef> or B<string scalar> format as
+L<CHI/"DURATION EXPRESSIONS">. A B<coderef> should return value in same format.
+You can use this method inside L<CHI::Cascade/code> and
+L<CHI::Cascade/recomputed> your callbacks if you want to force recomputing of
+current target through minimum this time.
 
 =back
 

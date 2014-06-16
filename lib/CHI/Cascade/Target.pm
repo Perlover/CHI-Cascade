@@ -63,8 +63,8 @@ sub expires {
 	return $expires
 	  if $expires eq 'never' || $expires eq 'now';
 
-	$self->{expires_finish_time} = ( $_[2] || Time::HiRes::time ) + parse_duration( $_[0] );
-	return $_[0];
+	$self->{expires_finish_time} = Time::HiRes::time + parse_duration( $expires );
+	return $expires;
     }
     else {
 	return

@@ -29,6 +29,7 @@ t/08_fast_mmap_expires.t
 t/09_fast_mmap_ttl.t
 t/10_fast_mmap_stash.t
 t/11_fast_mmap_actual_term_expires.t
+t/12_fast_mmap_expires_cb.t
 t/lib/test_01_actual_term.pm
 t/lib/test_02_touch.pm
 t/lib/test_03_depends_catch.pm
@@ -37,4 +38,5 @@ t/lib/test_05_expires.pm
 t/lib/test_06_ttl.pm
 t/lib/test_07_stash.pm
 t/lib/test_08_actual_term_expires.pm
+t/lib/test_09_expires_cb.pm
 TODO.txt

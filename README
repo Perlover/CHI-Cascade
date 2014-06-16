@@ -243,9 +243,11 @@ METHODS
             in cache.
 
         value_expires
-            Optional. Sets an expire value for all future target markers are
-            created by this rule in notation described in "DURATION
-            EXPRESSIONS" in CHI. The default is 'never'.
+            Optional. Sets an CHI's cache expire value for all future target
+            markers are created by this rule in notation described in
+            "DURATION EXPRESSIONS" in CHI. The default is 'never'. It can be
+            coderef or string scalar format as "DURATION EXPRESSIONS" in
+            CHI. A coderef should return value in same format.
 
         ttl Optional. An arrayref for min & max intervals of TTL. Example:
             "[ 60, 3600 ]" - where the minimum ttl is seconds and the
