@@ -18,7 +18,7 @@ sub test_cascade {
     $cascade->rule(
 	target		=> 'big_array',
 	code		=> sub {
-	    sleep 1;
+	    select( undef, undef, undef, 1.0 );
 	    return [ 1 .. 1000 ];
 	},
 	recomputed	=> sub { $recomputed++ }
@@ -48,7 +48,7 @@ sub test_cascade {
     my $time2 = time;
 
     ok( $cascade->{stats}{recompute} == 0 );
-    cmp_ok( $time2 - $time1, '<', 0.1 );
+    cmp_ok( $time2 - $time1, '<', 0.5 );
     ok( CHI::Cascade::Value->state_as_str($state) eq "CASCADE_DEFERRED | CASCADE_NO_CACHE" );
 
     my $res;
