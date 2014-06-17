@@ -1,5 +1,11 @@
 Revision history for perl module CHI::Cascade
 
+0.283 2014-06-17
+    - Now i set up minimal version of perl 5.10 because i use defined-or '//'
+      operator and some CPAN's tests are failed. I don't whant now to rewrite
+      module for old version because i don't love very old soft and love
+      an effective code, sorry ;-)
+
 0.282 2014-06-16
     - some corrected t/test_04.pm
       ( test fail report here - http://www.cpantesters.org/cpan/report/8b744d08-764a-11e3-8d2f-66cfdfbfc7aa )

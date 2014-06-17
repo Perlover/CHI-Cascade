@@ -2,6 +2,7 @@ package CHI::Cascade::Rule;
 
 use strict;
 use warnings;
+use v5.10;
 
 use Scalar::Util 'weaken';
 

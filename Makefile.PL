@@ -10,6 +10,7 @@ author 'Perlover <perlover@perlover.com>';
 version_from 'lib/CHI/Cascade.pm';
 auto_set_repository;
 license 'perl';
+perl_version 5.010;
 
 requires 'CHI';
 requires 'Time::HiRes';
