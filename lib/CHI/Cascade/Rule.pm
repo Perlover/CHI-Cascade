@@ -178,10 +178,12 @@ returns reference to L<CHI::Cascade> instance object for this rule.
 Sets an L<CHI>'s cache expire value for the target marker of this value to be
 created by this rule in notation described in L<CHI/"DURATION EXPRESSIONS">. The
 B<default> is 'never'. It can be B<coderef> or B<string scalar> format as
-L<CHI/"DURATION EXPRESSIONS">. A B<coderef> should return value in same format.
-You can use this method inside L<CHI::Cascade/code> and
-L<CHI::Cascade/recomputed> your callbacks if you want to force recomputing of
-current target through minimum this time.
+L<CHI/"DURATION EXPRESSIONS">. A B<coderef> to be called as C<<
+$coderef->($rule) >> and should return expire time as string value. You can use
+this method inside L<CHI::Cascade/code> and L<CHI::Cascade/recomputed> your
+callbacks if you want to force recomputing of current target through minimum
+this time.
+
 
 =back
 
