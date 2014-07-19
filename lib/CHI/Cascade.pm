@@ -3,7 +3,7 @@ package CHI::Cascade;
 use strict;
 use warnings;
 
-our $VERSION = 0.283;
+our $VERSION = 0.284;
 
 use Carp;
 
@@ -12,6 +12,8 @@ use CHI::Cascade::Rule;
 use CHI::Cascade::Target;
 use Time::HiRes ();
 use POSIX ();
+
+sub min ($$) { $_[0] < $_[1] ? $_[0] : $_[1] }
 
 sub new {
     my ($class, %opts) = @_;
@@ -111,8 +113,11 @@ sub target_unlock {
     if ( my $trg_obj = $self->{target_chi}->get( "t:$target" ) ) {
 	$trg_obj->unlock;
 
-	1 && $trg_obj->touch, $self->{run_opts}{actual_term} && $self->{orig_target} eq $target && $trg_obj->actual_stamp
-	  if ( $value && $value->state & CASCADE_RECOMPUTED );
+	if ( $value && $value->state & CASCADE_RECOMPUTED ) {
+	    $trg_obj->touch;
+	    $trg_obj->actual_stamp
+	      if $self->{run_opts}{actual_term} && $self->{orig_target} eq $target;
+	}
 
 	$self->{target_chi}->set( "t:$target", $trg_obj, $rule->target_expires( $trg_obj ) );
     }
@@ -196,7 +201,7 @@ sub value_ref_if_recomputed {
 
     my @qr_params = $rule->qr_params;
 
-    my ( $ret_state, $ttl, $ttl_recompute ) = ( CASCADE_ACTUAL_VALUE );
+    my ( $ret_state, $ttl, $should_be_recomputed ) = ( CASCADE_ACTUAL_VALUE );
 
     if ( $self->target_computing( $target, \$ttl ) ) {
 	# If we have any target as a being computed (dependencie/original)
@@ -246,14 +251,22 @@ sub value_ref_if_recomputed {
 	$self->target_lock($rule)
 	  if ! $self->target_time($target);
 
-	$ttl_recompute = $self->target_locked($target);
+	$should_be_recomputed = $self->target_locked($target);
 
-	if ( defined $ttl && $ttl > 0 && ! $ttl_recompute ) {
+	if ( defined $ttl && $ttl > 0 && ! $should_be_recomputed ) {
 	    $ret_state = CASCADE_TTL_INVOLVED;
 	    $self->{ttl} = $ttl;
 	}
 	else {
-	    my ( $rule_ttl, $circle_hash, $start_time, $ret ) = ( $rule->ttl, $only_from_cache ? 'only_cache_chain' : 'chain' );
+	    my (
+		$rule_ttl,
+		$circle_hash,
+		$start_time,
+		$min_start_time
+	    ) = (
+		$rule->ttl,
+		$only_from_cache ? 'only_cache_chain' : 'chain'
+	    );
 
 	    foreach my $depend (@{ $rule->depends }) {
 		$dep_target = ref($depend) eq 'CODE' ? $depend->( $rule, @qr_params ) : $depend;
@@ -265,28 +278,33 @@ sub value_ref_if_recomputed {
 
 		$self->{ $circle_hash }{$target}{$dep_target} = 1;
 
-		$ret = $catcher->( sub {
+		$catcher->( sub {
 		    if (   ! $only_from_cache
 			&& ( $start_time = ( $self->{stats}{dependencies_lookup}++,
 			     ( $dep_values{$dep_target}->[1] = $self->value_ref_if_recomputed( $dep_values{$dep_target}->[0], $dep_target ) )->state & CASCADE_RECOMPUTED && Time::HiRes::time
 			|| ( $start_time = $self->target_time($dep_target) ) > $self->target_time($target) && $start_time ) ) )
 		    {
-			if ( defined $rule_ttl && $rule_ttl > 0 && ! defined $ttl && ! $ttl_recompute && ( $start_time + $rule_ttl ) > Time::HiRes::time ) {
-			    $self->target_start_ttl( $rule, $start_time );
-			    $ret_state = CASCADE_TTL_INVOLVED;
-			    $self->{ttl} = $start_time + $rule_ttl - Time::HiRes::time;
-			    return 1;
+			if (    ! $should_be_recomputed
+			     && ! defined $ttl
+			     && defined $rule_ttl
+			     && $rule_ttl > 0
+			     && ( $start_time + $rule_ttl ) > Time::HiRes::time )
+			{
+			    $min_start_time = defined $min_start_time ? min( $start_time, $min_start_time ) : $start_time;
 			}
 			else {
 			    $self->target_lock($rule);
-			    return 0;
 			}
 		    }
 		} );
 
 		delete $self->{ $circle_hash }{$target}{$dep_target};
+	    }
 
-		last if $ret == 1;
+	    if ( defined $min_start_time ) {
+		$ret_state = CASCADE_TTL_INVOLVED;
+		$self->target_start_ttl( $rule, $min_start_time );
+		$self->{ttl} = $min_start_time + $rule_ttl - Time::HiRes::time;
 	    }
 	}
 

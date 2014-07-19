@@ -1,5 +1,10 @@
 Revision history for perl module CHI::Cascade
 
+0.284 2014-07-20
+    - Fix bug with ttl, when one target with ttl's rule had dependencies which had other ttl'd rules
+    - few code optimizations
+    - update inc::Module::Install up to v1.10
+
 0.283 2014-06-17
     - Now i set up minimal version of perl 5.10 because i use defined-or '//'
       operator and some CPAN's tests are failed. I don't whant now to rewrite

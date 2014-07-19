@@ -51,7 +51,7 @@ sub ttl {
 	return $self;
     }
     else {
-	return $self->{finish_time} ? $self->{finish_time} - Time::HiRes::time : undef;
+	return exists $self->{finish_time} && $self->{finish_time} ? $self->{finish_time} - Time::HiRes::time : undef;
     }
 }
 
@@ -68,7 +68,7 @@ sub expires {
     }
     else {
 	return
-	    $self->{expires_finish_time}
+	    exists $self->{expires_finish_time} && $self->{expires_finish_time}
 	    ?
 		(
 		    $self->{expires_finish_time} > Time::HiRes::time
