@@ -57,7 +57,7 @@ sub test_cascade {
     is_deeply( $cascade->run('one_page_0'), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache');
     cmp_ok( $cascade->{stats}{recompute}, '==', 3, 'recompute stats - 4');
 
-    sleep 1;
+    select( undef, undef, undef, 0.5 );
 
     # To force recalculate dependencied
     $cascade->touch('big_array');
@@ -95,7 +95,7 @@ sub test_cascade {
 
     ok( $cascade->{stats}{dependencies_lookup} == $dependencies_lookup );
 
-    select( undef, undef, undef, 2.2 );
+    select( undef, undef, undef, 2.5 );
 
     is_deeply( $cascade->run( 'one_page_0', state => \$state, actual_term => 2.0 ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], '0th page from cache after touching');
     ok( $cascade->{stats}{recompute} == 7 );
