@@ -1,5 +1,10 @@
 Revision history for perl module CHI::Cascade
 
+NEXT_RELEASE
+    - Improved the test 11_fast_mmap_actual_term_expires.t
+      (test_08_actual_term_expires.pm). It was fail in some high-load test CPAN computers
+      because time intervals there were larger than I expected in the tests.
+
 0.284 2014-07-20
     - Fix bug with ttl, when one target with ttl's rule had dependencies which had other ttl'd rules
     - few code optimizations

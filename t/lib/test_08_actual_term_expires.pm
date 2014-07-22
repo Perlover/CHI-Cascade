@@ -40,7 +40,7 @@ sub test_cascade {
     $cascade->rule(
 	target		=> 'actual_test',
 	actual_term	=> 2.0,
-	value_expires	=> '3s',
+	value_expires	=> '4s',
 	depends		=> 'one_page_0',
 	code		=> sub {
 	    $_[2]->{one_page_0}
@@ -96,10 +96,10 @@ sub test_cascade {
 
     ok( $cascade->{stats}{dependencies_lookup} > $dependencies_lookup );
 
-    select( undef, undef, undef, 1.0 );
+    select( undef, undef, undef, 2.0 );
 
     # Here the 'value_expires' happened
-    # Before there was bug - the expires has been updated by actual_cash checking
+    # Before there was bug - the expires has been updated by actual_test checking
     is_deeply( $cascade->run( 'actual_test', state => \$state ), [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ], 'actual_test');
     ok( $cascade->{stats}{dependencies_lookup} > $dependencies_lookup );
     ok( $cascade->{stats}{recompute} == 7 );	# Here were recomputed 'actual_test' & 'one_page_0'

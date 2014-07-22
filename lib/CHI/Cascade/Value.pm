@@ -267,9 +267,11 @@ CHI::Cascade::Value->new->value(undef) >>) for example.
 
 =item CASCADE_ACTUAL_TERM
 
-The method L<CHI::Cascade/run> was run with
-L<actual_term|CHI::Cascade/actual_term> option and C<actual term> is actual for
-this value (a value can be old - the CASCADE_ACTUAL_VALUE bit will not be set).
+The method L<CHI::Cascade/run> was run with or rule for this target has an
+L<actual_term|CHI::Cascade/actual_term> option and the C<actual term> period has
+not passed from last time of a dependencies checking (a value returned by C<run>
+can be old and if it's true then the CASCADE_ACTUAL_VALUE will not be
+set).
 
 =item CASCADE_TTL_INVOLVED
 
