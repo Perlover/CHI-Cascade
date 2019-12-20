@@ -1,5 +1,8 @@
 Revision history for perl module CHI::Cascade
 
+NEXT_RELEASE
+    - Improved docs about stash method
+
 0.3
     - The run method can be called from other run method and from depends callref.
       This was made possible by creating a separate data instance for each root call of run method.

@@ -167,17 +167,33 @@ one dependence). Always is defined even there no defined C<depends> option for
 C<rule>. If L<'depends'|CHI::Cascade/depends> is coderef you will get a returned
 value of one.
 
-=item target
+=item target()
 
 returns current target as plain text after matching.
 
-=item params
+=item params()
 
 returns any data of any type what were passed to L<CHI::Cascade/params>
 
-=item cascade
+=item cascade()
 
 returns reference to L<CHI::Cascade> instance object for this rule.
+
+=item stash()
+
+It returns I<hashref> to a stash. A stash is hash for temporary data between
+rule's codes. It can be used only from inside call stack of L</run>. Example:
+
+    $cascade->run( 'target', stash => { key1 => value1 } )
+
+and into rule's code:
+
+    $rule->stash->{key1}
+
+If a L</run> method didn't get stash hashref the default stash will be as empty
+hash. You can pass a data between rule's codes but it's recommended only in
+special cases. For example when run's target cannot get a full data from its
+target's name.
 
 =item value_expires
 

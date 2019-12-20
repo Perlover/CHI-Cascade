@@ -882,16 +882,16 @@ by this method. It will remove target marker if one exists and once when cascade
 will need target value it will be recomputed. In a during recomputing of course
 cascade will return an old value if one exists in cache.
 
-=item stash ()
+=item stash()
 
-It returns I<hashref> to a stash. A stash is hash for temporary data between
+B<Deprecated!> It returns I<hashref> to a stash. A stash is hash for temporary data between
 rule's codes. It can be used only from inside L</run>. Example:
 
     $cascade->run( 'target', stash => { key1 => value1 } )
 
 and into rule's code:
 
-    # DEPRICATED. It's supported now but please don't use it
+    # DEPRECATED - OLD METHOD! It's supported and works but please don't use it
     $rule->cascade->stash->{key1}
 
     # NEW METHOD:
