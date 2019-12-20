@@ -1,4 +1,4 @@
-package test_07_stash;
+package test_07_deprecated_stash;
 
 use strict;
 use Test::More;
@@ -20,7 +20,7 @@ sub test_cascade {
 	code		=> sub {
 	    my $rule = shift;
 
-	    ok( $rule->stash && $rule->stash->{key1} == 1 );
+	    ok( $rule->cascade->stash && $rule->cascade->stash->{key1} == 1 );
 	    return [ 1 .. 1000 ];
 	}
     );
@@ -33,9 +33,9 @@ sub test_cascade {
 
 	    ok( $target eq 'one_page_0'
 		?
-		    $rule->stash && $rule->stash->{key2} == 2
+		    $rule->cascade->stash && $rule->cascade->stash->{key2} == 2
 		:
-		    ref $rule->stash eq 'HASH' && ! exists $rule->stash->{key2}
+		    ref $rule->cascade->stash eq 'HASH' && ! exists $rule->cascade->stash->{key2}
 	    );
 	    my ($page) = $rule->target =~ /^one_page_(\d+)$/;
 

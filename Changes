@@ -2,6 +2,7 @@ Revision history for perl module CHI::Cascade
 
 NEXT_RELEASE
     - Improved docs about stash method
+    - The "nested run methods" test was written andit works as expected.
 
 0.3
     - The run method can be called from other run method and from depends callref.
