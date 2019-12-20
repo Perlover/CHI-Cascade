@@ -23,7 +23,12 @@ sub new {
 	matched_target	=> undef
     }, ref($class) || $class;
 
-    weaken $self->{cascade};	# It is against memory leaks
+    if ( $opts{run_instance} ) {
+	$self->{run_instance} = $opts{run_instance};
+	weaken $self->{run_instance};	# It is against memory leaks
+    }
+
+    weaken $self->{cascade};		# It is against memory leaks
 
     $self;
 }
@@ -93,6 +98,7 @@ sub target	{ shift->{matched_target}	}
 sub params	{ shift->{params}		}
 sub cascade	{ shift->{cascade}		}
 sub dep_values	{ shift->{dep_values}		}
+sub stash       { shift->{run_instance}{stash}	}
 
 1;
 __END__
@@ -183,7 +189,6 @@ $coderef->($rule) >> and should return expire time as string value. You can use
 this method inside L<CHI::Cascade/code> and L<CHI::Cascade/recomputed> your
 callbacks if you want to force recomputing of current target through minimum
 this time.
-
 
 =back
 

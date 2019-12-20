@@ -1,6 +1,9 @@
 Revision history for perl module CHI::Cascade
 
-NEXT_RELEASE
+0.3
+    - The run method can be called from other run method and from depends callref.
+      This was made possible by creating a separate data instance for each root call of run method.
+      Existed tests are passed but a test dedicated for this feature is not written yet.
     - Improved the test 11_fast_mmap_actual_term_expires.t
       (test_08_actual_term_expires.pm). It was fail in some high-load test CPAN computers
       because time intervals there were larger than I expected in the tests.

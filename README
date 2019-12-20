@@ -262,6 +262,13 @@ METHODS
         target If any dependence of this target of any dependencies of
         dependencies were (re)computed this target will be (re)computed too.
 
+        The run method of instance of cascade can be called from other run
+        method of same instance and from "callref" function inside "depends"
+        rule's option. This was made possible by creating a separate data
+        instance for each root call of run method. This can come in handy
+        when you compute dependencies on the go, which are computed by the
+        same object (instance) of "cascade".
+
         $target
             Required. Plain text string of target.
 
@@ -357,7 +364,11 @@ METHODS
 
         and into rule's code:
 
+            # DEPRICATED. It's supported now but please don't use it
             $rule->cascade->stash->{key1}
+
+            # NEW METHOD:
+            $rule->stash->{key1}
 
         If a "run" method didn't get stash hashref the default stash will be
         as empty hash. You can pass a data between rule's codes but it's
