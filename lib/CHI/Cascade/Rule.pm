@@ -16,19 +16,20 @@ sub new {
 
     # To do clone or new object
     my $self = bless {
-	map( { $_ => $from->{$_} }
-	  grep { exists $from->{$_} }
-	  qw( target depends depends_catch code params busy_lock cascade recomputed actual_term ttl value_expires ) ),
-	qr_params	=> [],
-	matched_target	=> undef
+        map( { $_ => $from->{$_} }
+          grep { exists $from->{$_} }
+          qw( target depends depends_catch code params busy_lock cascade recomputed actual_term ttl value_expires ) ),
+        qr_params       => [],
+        matched_target  => undef
     }, ref($class) || $class;
 
     if ( $opts{run_instance} ) {
-	$self->{run_instance} = $opts{run_instance};
-	weaken $self->{run_instance};	# It is against memory leaks
+        $self->{run_instance} = $opts{run_instance};
+        weaken $self->{run_instance};   # It is against memory leaks
     }
 
-    weaken $self->{cascade};		# It is against memory leaks
+    weaken $self->{cascade};            # It is against memory leaks
+    $self->{resolved_depends} = undef;
 
     $self;
 }
@@ -37,31 +38,42 @@ sub qr_params {
     my $self = shift;
 
     if (@_) {
-	$self->{qr_params} = [ @_ ];
+        $self->{qr_params} = [ @_ ];
     }
     else {
-	return @{ $self->{qr_params} };
+        return @{ $self->{qr_params} };
     }
 }
 
 sub depends {
     my $self = shift;
 
-    if ( ref( $self->{depends} ) eq 'CODE' ) {
-	my $res = $self->{depends}->( $self, $self->qr_params );
+    return $self->{resolved_depends}
+      if $self->{resolved_depends};
 
-	return ref($res) eq 'ARRAY' ? $res : [ $res ];
+    if ( ref( $self->{depends} ) eq 'CODE' ) {
+        my $res = $self->{depends}->( $self, $self->qr_params );
+
+        $self->{resolved_depends} = ref($res) eq 'ARRAY' ? [ @$res ] : [ $res ];
+    }
+    else {
+        $self->{resolved_depends} = [ @{ $self->{depends} } ];
     }
 
-    return $self->{depends};
+    for ( @{ $self->{resolved_depends} } ) {
+        $_ = $_->( $self, $self->qr_params )
+          if ( ref eq 'CODE' );
+    }
+
+    $self->{resolved_depends};
 }
 
 sub value_expires {
     my $self = shift;
 
     if (@_) {
-	$self->{value_expires} = $_[0];
-	return $self;
+        $self->{value_expires} = $_[0];
+        return $self;
     }
     ( ref $self->{value_expires} eq 'CODE' ? $self->{value_expires}->( $self ) : $self->{value_expires} ) // 'never';
 }
@@ -70,10 +82,10 @@ sub target_expires {
     my ( $self, $trg_obj ) = @_;
 
     $trg_obj->locked
-	?
-	$self->{busy_lock} || $self->{cascade}{busy_lock} || 'never'
-	:
-	$trg_obj->expires // $trg_obj->expires( $self->value_expires );
+        ?
+        $self->{busy_lock} || $self->{cascade}{busy_lock} || 'never'
+        :
+        $trg_obj->expires // $trg_obj->expires( $self->value_expires );
 }
 
 sub ttl {
@@ -85,20 +97,20 @@ sub ttl {
     $self->{ttl_time} && return $self->{ttl_time};
 
     if ( ref $self->{ttl} eq 'ARRAY' && @{ $self->{ttl} } == 2 ) {
-	return $self->{ttl_time} = rand( $self->{ttl}[1] - $self->{ttl}[0] ) + $self->{ttl}[0];
+        return $self->{ttl_time} = rand( $self->{ttl}[1] - $self->{ttl}[0] ) + $self->{ttl}[0];
     }
     elsif ( ref $self->{ttl} eq 'CODE' ) {
-	return $self->{ttl_time} = $self->{ttl}->( $self, $self->qr_params );
+        return $self->{ttl_time} = $self->{ttl}->( $self, $self->qr_params );
     }
 
     return undef;
 }
 
-sub target	{ shift->{matched_target}	}
-sub params	{ shift->{params}		}
-sub cascade	{ shift->{cascade}		}
-sub dep_values	{ shift->{dep_values}		}
-sub stash       { shift->{run_instance}{stash}	}
+sub target      { shift->{matched_target}       }
+sub params      { shift->{params}               }
+sub cascade     { shift->{cascade}              }
+sub dep_values  { shift->{dep_values}           }
+sub stash       { shift->{run_instance}{stash}  }
 
 1;
 __END__
@@ -110,19 +122,19 @@ CHI::Cascade::Rule - a rule class
 =head1 SYNOPSIS
 
     $cascade->rule(
-	target	=> qr/^target_(\d+)$/,
-	depends	=> 'base_target',
-	code	=> sub {
-	    my ( $rule, $target, $dep_values ) = @_;
+        target  => qr/^target_(\d+)$/,
+        depends => 'base_target',
+        code    => sub {
+            my ( $rule, $target, $dep_values ) = @_;
 
-	    # An execution of $cascade->run('target_12') will pass in code a $rule as:
-	    #
-	    # $rule->target	eq	$target
-	    # $rule->depends	===	[ 'base_target' ]
-	    # $rule->qr_params	===	( 12 )
-	    # $rule->params	==	[ 1, 2, 3 ]
-	},
-	params	=> [ 1, 2, 3 ]
+            # An execution of $cascade->run('target_12') will pass in code a $rule as:
+            #
+            # $rule->target     eq      $target
+            # $rule->depends    ===     [ 'base_target' ]
+            # $rule->qr_params  ===     ( 12 )
+            # $rule->params     ==      [ 1, 2, 3 ]
+        },
+        params  => [ 1, 2, 3 ]
     );
 
     $cascade->run('target_12');
@@ -165,7 +177,8 @@ returns arrayref of dependencies (L<depends|CHI::Cascade/depends> option of
 L<rule|CHI::Cascade/rule> method) even if one scalar value is passed there (as
 one dependence). Always is defined even there no defined C<depends> option for
 C<rule>. If L<'depends'|CHI::Cascade/depends> is coderef you will get a returned
-value of one.
+value of one. If any item of depends array is code it will be executed too. To
+see more details in L<CHI::Cascade/depends>.
 
 =item target()
 
@@ -182,7 +195,7 @@ returns reference to L<CHI::Cascade> instance object for this rule.
 =item stash()
 
 It returns I<hashref> to a stash. A stash is hash for temporary data between
-rule's codes. It can be used only from inside call stack of L</run>. Example:
+rule's codes. It can be used only from inside call stack of L<CHI::Cascade/run>. Example:
 
     $cascade->run( 'target', stash => { key1 => value1 } )
 
@@ -190,7 +203,7 @@ and into rule's code:
 
     $rule->stash->{key1}
 
-If a L</run> method didn't get stash hashref the default stash will be as empty
+If a L<CHI::Cascade/run> method didn't get stash hashref the default stash will be as empty
 hash. You can pass a data between rule's codes but it's recommended only in
 special cases. For example when run's target cannot get a full data from its
 target's name.

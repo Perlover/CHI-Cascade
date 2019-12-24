@@ -105,22 +105,22 @@ METHODS
             arrayref
                 An each item of list can be scalar value (exactly matched
                 target) or code reference. If item is coderef it will be
-                executed as $coderef->( $rule, $rule->qr_params ) and should
-                return a scalar value as current dependence for this target
-                at runtime (the API for coderef parameters was changed since
-                v0.16)
+                executed once as $coderef->( $rule, $rule->qr_params ) and
+                should return a scalar value as current dependence for this
+                target at runtime (the API for coderef parameters was
+                changed since v0.16)
 
             coderef
-                This subroutine will be executed every time inside *run*
-                method if necessary and with parameters as: $coderef->(
-                $rule, $rule->qr_params ) (API was changed since v0.16). It
-                should return scalar or arrayref. The returned value is
-                *scalar* it will be considered as single dependence of this
-                target and the behavior will be exactly as described for
-                *scalar* in this paragraph. If the returned value is
-                *arrayref* it will be considered as list of dependencies for
-                this target and the behavior will be exactly as described
-                for *arrayref* in this paragraph.
+                This subroutine will be executed once inside *run* method if
+                necessary with parameters as: $coderef->( $rule,
+                <$rule-qr_params|CHI::Cascade::Rule/qr_params >> ) (API was
+                changed since v0.16). It should return scalar or arrayref.
+                The returned value is *scalar* it will be considered as
+                single dependence of this target and the behavior will be
+                exactly as described for *scalar* in this paragraph. If the
+                returned value is *arrayref* it will be considered as list
+                of dependencies for this target and the behavior will be
+                exactly as described for *arrayref* in this paragraph.
 
         depends_catch
             Optional. This is coderef for dependence exceptions. If any

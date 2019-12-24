@@ -14,46 +14,46 @@ sub test_cascade {
     my $cascade = shift;
 
     $cascade->rule(
-	target		=> 'big_array',
-	code		=> sub {
-	    return [ 1 .. 1000 ];
-	},
-	recomputed	=> sub { $recomputed++ }
+        target          => 'big_array',
+        code            => sub {
+            return [ 1 .. 1000 ];
+        },
+        recomputed      => sub { $recomputed++ }
     );
 
     $cascade->rule(
-	target		=> 'get_depends',
-	code		=> sub {
-	    my $rule = shift;
-	    ok( $rule->stash->{a} == 2, 'get_depends stash' );
-	    return 'big_array';
-	},
-	recomputed	=> sub { $recomputed++ }
+        target          => 'get_depends',
+        code            => sub {
+            my $rule = shift;
+            ok( $rule->stash->{a} == 2, 'get_depends stash' );
+            return 'big_array';
+        },
+        recomputed      => sub { $recomputed++ }
     );
 
     $cascade->rule(
-	target		=> qr/^one_page_(\d+)$/,
-	depends		=> [ sub { $_[0]->cascade->run('get_depends', stash => { a => 2 } ) } ],
-	code		=> sub {
-	    my ($rule) = @_;
+        target          => qr/^one_page_(\d+)$/,
+        depends         => [ sub { $_[0]->cascade->run('get_depends', stash => { a => 2 } ) } ],
+        code            => sub {
+            my ($rule) = @_;
 
-	    my ($page) = $rule->target =~ /^one_page_(\d+)$/;
+            my ($page) = $rule->target =~ /^one_page_(\d+)$/;
 
-	    ok( $page != 0 || $rule->stash->{a} == 1, 'one_page stash' );
+            ok( $page != 0 || $rule->stash->{a} == 1, 'one_page stash' );
 
-	    my $ret = [ @{$rule->dep_values->{big_array}}[ ($page * 10) .. (( $page + 1 ) * 10 - 1) ] ];
-	    $ret;
-	},
-	recomputed	=> sub { $recomputed++ }
+            my $ret = [ @{$rule->dep_values->{big_array}}[ ($page * 10) .. (( $page + 1 ) * 10 - 1) ] ];
+            $ret;
+        },
+        recomputed      => sub { $recomputed++ }
     );
 
     $cascade->rule(
-	target		=> 'actual_test',
-	actual_term	=> 2.0,
-	depends		=> 'one_page_0',
-	code		=> sub {
-	    $_[2]->{one_page_0}
-	}
+        target          => 'actual_test',
+        actual_term     => 2.0,
+        depends         => 'one_page_0',
+        code            => sub {
+            $_[2]->{one_page_0}
+        }
     );
 
     ok( $cascade->{stats}{recompute} == 0, 'recompute stats - 1');
